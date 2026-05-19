@@ -1,12 +1,14 @@
+import { useEffect } from 'react';
+import { getPricesNearby } from './fuelService';
+
 function App() {
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <h1 className="text-2xl font-semibold text-gray-800">
-        Petrol Price Finder 🇦🇺
-      </h1>
-      <p className="text-gray-500 mt-1">Find the cheapest fuel near you in NSW</p>
-    </div>
-  )
+  useEffect(() => {
+    getPricesNearby(-33.8688, 151.2093) // Sydney coords for testing
+      .then(data => console.log(data))
+      .catch(err => console.error(err));
+  }, []);
+
+  return <div>Check the browser console for API results</div>;
 }
 
-export default App
+export default App;
