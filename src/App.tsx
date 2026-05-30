@@ -33,6 +33,8 @@ const FUEL_TYPES = [
   { value: 'LPG', label: 'LPG' },
 ]
 
+type SortMode = 'price' | 'distance'
+
 function App() {
   const [search, setSearch] = useState('')
   const [fuelType, setFuelType] = useState('E10')
@@ -40,12 +42,15 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [locationLoading, setLocationLoading] = useState(false)
+  const [sortMode, setSortMode] = useState<SortMode>('price')
+
+  const RADIUS = 3
 
   async function fetchByCoords(lat: number, lng: number) {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/fuel?lat=${lat}&lng=${lng}&radius=5&fueltype=${fuelType}`)
+      const res = await fetch(`/api/fuel?lat=${lat}&lng=${lng}&radius=${RADIUS}&fueltype=${fuelType}`)
       const json = await res.json()
       if (json.errorDetails) throw new Error(json.errorDetails.message)
       setData(json)
@@ -61,7 +66,6 @@ function App() {
     setLoading(true)
     setError(null)
     try {
-      // Geocode suburb/postcode to coordinates using Nominatim
       const geoRes = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(search + ', NSW, Australia')}&format=json&limit=1`
       )
@@ -105,6 +109,19 @@ function App() {
     return 'text-orange-500'
   }
 
+  const getSortedStations = () => {
+    if (!data) return []
+    const withPrices = data.stations
+      .map(station => ({ station, price: getPrice(station.code) }))
+      .filter(item => item.price !== undefined)
+
+    if (sortMode === 'price') {
+      return withPrices.sort((a, b) => a.price!.price - b.price!.price).slice(0, 8)
+    } else {
+      return withPrices.sort((a, b) => a.station.location.distance - b.station.location.distance).slice(0, 8)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -136,7 +153,7 @@ function App() {
         <button
           onClick={handleUseLocation}
           disabled={locationLoading}
-          className="w-full border border-blue-600 text-blue-600 py-2 rounded-lg text-sm font-medium"
+          className="w-full border border-blue-600 text-blue-600 py-2 rounded-lg text-sm font-medium mb-3"
         >
           {locationLoading ? 'Getting location...' : '📍 Use my current location'}
         </button>
@@ -144,7 +161,7 @@ function App() {
         <select
           value={fuelType}
           onChange={e => setFuelType(e.target.value)}
-          className="w-full mt-3 border border-gray-300 rounded-lg px-4 py-2 text-sm"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
         >
           {FUEL_TYPES.map(f => (
             <option key={f.value} value={f.value}>{f.label}</option>
@@ -167,23 +184,53 @@ function App() {
       {/* Results */}
       {data && !loading && (
         <div className="px-4 mt-4 pb-8">
-          <p className="text-sm text-gray-500 mb-3">
-            {data.stations.length} stations found · avg {avgPrice?.toFixed(1)}¢/L
-          </p>
+          <div className="flex justify-between items-center mb-3">
+            <p className="text-sm text-gray-500">
+              {data.stations.length} stations within {RADIUS}km · avg {avgPrice?.toFixed(1)}¢/L
+            </p>
+
+            {/* Toggle */}
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setSortMode('price')}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${
+                  sortMode === 'price'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-500'
+                }`}
+              >
+                Price
+              </button>
+              <button
+                onClick={() => setSortMode('distance')}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${
+                  sortMode === 'distance'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-500'
+                }`}
+              >
+                Distance
+              </button>
+            </div>
+          </div>
+
           <div className="space-y-3">
-            {data.stations.map((station, index) => {
-              const price = getPrice(station.code)
-              if (!price) return null
-              const saving = avgPrice ? (avgPrice - price.price).toFixed(1) : null
+            {getSortedStations().map(({ station, price }, index) => {
+              const saving = avgPrice ? (avgPrice - price!.price).toFixed(1) : null
 
               return (
                 <div key={station.code} className="bg-white rounded-xl shadow-sm p-4">
                   <div className="flex justify-between items-start">
                     <div className="flex-1 pr-4">
                       <div className="flex items-center gap-2">
-                        {index === 0 && (
+                        {index === 0 && sortMode === 'price' && (
                           <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">
                             Cheapest
+                          </span>
+                        )}
+                        {index === 0 && sortMode === 'distance' && (
+                          <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-medium">
+                            Closest
                           </span>
                         )}
                       </div>
@@ -194,8 +241,8 @@ function App() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className={`text-3xl font-bold ${getPriceColor(price.price)}`}>
-                        {price.price}
+                      <p className={`text-3xl font-bold ${getPriceColor(price!.price)}`}>
+                        {price!.price}
                       </p>
                       <p className="text-gray-400 text-xs">¢/litre</p>
                       {saving && parseFloat(saving) > 0 && (
