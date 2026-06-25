@@ -44,14 +44,12 @@ function App() {
   const [locationLoading, setLocationLoading] = useState(false)
   const [sortMode, setSortMode] = useState<SortMode>('price')
   const [lastSearchCoords, setLastSearchCoords] = useState<{lat: number, lng: number} | null>(null)
-  const [staleResults, setStaleResults] = useState(false)
 
   const RADIUS = 3
 
-  async function fetchByCoords(lat: number, lng: number, fuel: string = fuelType) {
+  async function fetchByCoords(lat: number, lng: number, fuel: string) {
     setLoading(true)
     setError(null)
-    setStaleResults(false)
     try {
       const res = await fetch(`/api/fuel?lat=${lat}&lng=${lng}&radius=${RADIUS}&fueltype=${fuel}`)
       const json = await res.json()
@@ -98,10 +96,10 @@ function App() {
     )
   }
 
-  function handleFuelTypeChange(newFuel: string) {
+  async function handleFuelTypeChange(newFuel: string) {
     setFuelType(newFuel)
-    if (data && lastSearchCoords) {
-      setStaleResults(true)
+    if (lastSearchCoords) {
+      await fetchByCoords(lastSearchCoords.lat, lastSearchCoords.lng, newFuel)
     }
   }
 
@@ -127,9 +125,9 @@ function App() {
       .filter(item => item.price !== undefined)
 
     if (sortMode === 'price') {
-      return withPrices.sort((a, b) => a.price!.price - b.price!.price).slice(0, 8)
+      return withPrices.sort((a, b) => a.price!.price - b.price!.price).slice(0, 10)
     } else {
-      return withPrices.sort((a, b) => a.station.location.distance - b.station.location.distance).slice(0, 8)
+      return withPrices.sort((a, b) => a.station.location.distance - b.station.location.distance).slice(0, 10)
     }
   }
 
@@ -137,23 +135,27 @@ function App() {
     <div className="min-h-screen" style={{ backgroundColor: '#0f1535', color: 'white' }}>
 
       {/* Row 1: Nav */}
-      <div style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-        className="px-6 py-3 flex items-center gap-3">
-        <h1 className="text-lg font-bold shrink-0">
+      <div
+        style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+        className="px-6 flex items-stretch gap-3"
+      >
+        <h1 className="text-lg font-bold flex items-center shrink-0 py-3">
           fuel<span style={{ color: '#4c6ef5' }}>finder</span>
         </h1>
 
         <button
           onClick={handleUseLocation}
           disabled={locationLoading}
-          className="shrink-0 text-sm font-semibold flex items-center gap-1.5 px-4 py-2"
+          className="shrink-0 text-sm font-semibold flex items-center gap-1.5 px-4 my-3"
           style={{ backgroundColor: '#4c6ef5', color: 'white' }}
         >
           📍 {locationLoading ? 'Locating...' : 'Use my location'}
         </button>
 
-        <div className="flex-1 flex items-center gap-2 px-3 py-2"
-          style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <div
+          className="flex-1 flex items-center gap-2 px-3 my-3"
+          style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)' }}
+        >
           <input
             type="text"
             value={search}
@@ -165,7 +167,7 @@ function App() {
           <button
             onClick={handleSearch}
             disabled={loading}
-            className="text-sm font-medium px-3 py-1"
+            className="text-sm font-medium px-3 py-1 shrink-0"
             style={{ backgroundColor: '#4c6ef5', color: 'white' }}
           >
             Search
@@ -174,8 +176,10 @@ function App() {
       </div>
 
       {/* Row 2: Fuel type */}
-      <div style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-        className="px-6 py-2 flex items-center gap-2">
+      <div
+        style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+        className="px-6 py-2 flex items-center gap-2"
+      >
         {FUEL_TYPES.map(f => (
           <button
             key={f.value}
@@ -192,25 +196,12 @@ function App() {
         ))}
       </div>
 
-      {/* Stale results warning */}
-      {staleResults && data && lastSearchCoords && (
-        <div className="px-6 py-2 flex items-center justify-between text-sm"
-          style={{ backgroundColor: 'rgba(76,110,245,0.15)', borderBottom: '1px solid rgba(76,110,245,0.3)' }}>
-          <span style={{ color: 'rgba(255,255,255,0.6)' }}>Fuel type changed — results are for previous selection</span>
-          <button
-            onClick={() => fetchByCoords(lastSearchCoords.lat, lastSearchCoords.lng, fuelType)}
-            className="font-semibold"
-            style={{ color: '#4c6ef5' }}
-          >
-            Update results →
-          </button>
-        </div>
-      )}
-
       {/* Error */}
       {error && (
-        <div className="mx-6 mt-4 px-4 py-3 text-sm text-red-300"
-          style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}>
+        <div
+          className="mx-6 mt-4 px-4 py-3 text-sm text-red-300"
+          style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}
+        >
           {error}
         </div>
       )}
@@ -231,33 +222,38 @@ function App() {
       {/* Results */}
       {data && !loading && (
         <div className="px-6 mt-5 pb-10">
+
+          {/* Sort toggle on left, stats on right */}
           <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-white/30 uppercase tracking-wider">Sort by</span>
+              <div className="flex" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+                <button
+                  onClick={() => setSortMode('price')}
+                  className="px-4 py-1.5 text-sm font-medium"
+                  style={{
+                    backgroundColor: sortMode === 'price' ? '#4c6ef5' : 'transparent',
+                    color: sortMode === 'price' ? 'white' : 'rgba(255,255,255,0.4)',
+                  }}
+                >
+                  Price
+                </button>
+                <button
+                  onClick={() => setSortMode('distance')}
+                  className="px-4 py-1.5 text-sm font-medium"
+                  style={{
+                    backgroundColor: sortMode === 'distance' ? '#4c6ef5' : 'transparent',
+                    color: sortMode === 'distance' ? 'white' : 'rgba(255,255,255,0.4)',
+                    borderLeft: '1px solid rgba(255,255,255,0.1)',
+                  }}
+                >
+                  Distance
+                </button>
+              </div>
+            </div>
             <p className="text-sm text-white/40">
               {data.stations.length} stations · avg {avgPrice?.toFixed(1)}¢/L
             </p>
-            <div className="flex" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
-              <button
-                onClick={() => setSortMode('price')}
-                className="px-4 py-1.5 text-sm font-medium"
-                style={{
-                  backgroundColor: sortMode === 'price' ? '#4c6ef5' : 'transparent',
-                  color: sortMode === 'price' ? 'white' : 'rgba(255,255,255,0.4)',
-                }}
-              >
-                Price
-              </button>
-              <button
-                onClick={() => setSortMode('distance')}
-                className="px-4 py-1.5 text-sm font-medium"
-                style={{
-                  backgroundColor: sortMode === 'distance' ? '#4c6ef5' : 'transparent',
-                  color: sortMode === 'distance' ? 'white' : 'rgba(255,255,255,0.4)',
-                  borderLeft: '1px solid rgba(255,255,255,0.1)',
-                }}
-              >
-                Distance
-              </button>
-            </div>
           </div>
 
           <div className="space-y-1">
@@ -267,36 +263,35 @@ function App() {
               return (
                 <div
                   key={station.code}
-                  className="p-4 flex justify-between items-center"
+                  className="flex justify-between items-center"
                   style={{
                     backgroundColor: '#1a2150',
-                    borderLeft: index === 0 && sortMode === 'price'
-                      ? '3px solid #22c55e'
-                      : index === 0 && sortMode === 'distance'
-                      ? '3px solid #4c6ef5'
-                      : '3px solid transparent',
-                    marginBottom: '2px'
+                    borderLeft: index === 0 ? '3px solid #22c55e' : '3px solid transparent',
+                    marginBottom: '2px',
+                    padding: '14px 16px',
                   }}
                 >
-                  <div className="flex-1 pr-6">
+                  {/* Price on left */}
+                  <div className="shrink-0 mr-6 text-left">
+                    <p className={`text-4xl font-bold leading-none ${getPriceColor(price!.price)}`}>
+                      {price!.price}
+                    </p>
+                    <p className="text-white/40 text-xs mt-1">¢/litre</p>
+                    {saving && parseFloat(saving) > 0 && (
+                      <p className="text-green-400 text-xs mt-1">Save {saving}¢</p>
+                    )}
+                  </div>
+
+                  {/* Station info */}
+                  <div className="flex-1">
                     {index === 0 && (
-                      <p className="text-xs font-semibold mb-1"
-                        style={{ color: sortMode === 'price' ? '#22c55e' : '#4c6ef5' }}>
+                      <p className="text-xs font-semibold mb-1 text-green-400">
                         {sortMode === 'price' ? 'CHEAPEST' : 'CLOSEST'}
                       </p>
                     )}
                     <h2 className="font-bold text-white text-base leading-tight">{station.name}</h2>
                     <p className="text-white/40 text-xs mt-1">{station.address}</p>
                     <p className="text-white/30 text-xs mt-1">📍 {station.location.distance.toFixed(1)} km away</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className={`text-4xl font-bold leading-none ${getPriceColor(price!.price)}`}>
-                      {price!.price}
-                    </p>
-                    <p className="text-white/40 text-sm mt-1">¢/litre</p>
-                    {saving && parseFloat(saving) > 0 && (
-                      <p className="text-green-400 text-xs mt-1">Save {saving}¢</p>
-                    )}
                   </div>
                 </div>
               )
