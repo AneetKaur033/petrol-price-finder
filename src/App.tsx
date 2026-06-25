@@ -103,10 +103,10 @@ function App() {
     : null
 
   const getPriceColor = (price: number) => {
-    if (!avgPrice) return 'text-gray-900'
-    if (price <= avgPrice - 3) return 'text-green-600'
-    if (price >= avgPrice + 3) return 'text-red-500'
-    return 'text-orange-500'
+    if (!avgPrice) return 'text-white'
+    if (price <= avgPrice - 3) return 'text-green-400'
+    if (price >= avgPrice + 3) return 'text-red-400'
+    return 'text-orange-400'
   }
 
   const getSortedStations = () => {
@@ -123,124 +123,140 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: '#0f1535', color: 'white' }}>
 
-      {/* Top Nav */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4">
-        <h1 className="text-xl font-bold text-gray-900">
-          fuel<span className="text-blue-500">finder</span>
+      {/* Row 1: Nav */}
+      <div style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+        className="px-6 py-3 flex items-center gap-4">
+        <h1 className="text-lg font-bold shrink-0">
+          fuel<span style={{ color: '#4c6ef5' }}>finder</span>
         </h1>
-        <div className="flex-1 flex items-center bg-gray-100 rounded-full px-4 py-2 gap-2">
+
+        <div className="flex-1 flex items-center gap-2 px-3 py-2"
+          style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)' }}>
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
             placeholder="Enter suburb or postcode e.g. Bondi, 2026"
-            className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-white placeholder-white/30 focus:outline-none"
           />
           <button onClick={handleSearch} disabled={loading}>
-            <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" style={{ color: '#4c6ef5' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </button>
         </div>
-      </div>
 
-      {/* Filters Bar */}
-      <div className="bg-white border-b border-gray-100 px-6 py-3 flex items-center gap-3">
         <button
           onClick={handleUseLocation}
           disabled={locationLoading}
-          className="flex items-center gap-1.5 text-sm text-blue-500 font-medium"
+          className="shrink-0 text-sm font-medium px-3 py-2 flex items-center gap-1.5"
+          style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)', color: '#4c6ef5' }}
         >
-          <span>📍</span>
-          {locationLoading ? 'Locating...' : 'My location'}
+          📍 {locationLoading ? 'Locating...' : 'My location'}
         </button>
+      </div>
 
-        <div className="w-px h-4 bg-gray-200" />
-
-        <select
-          value={fuelType}
-          onChange={e => setFuelType(e.target.value)}
-          className="text-sm text-gray-600 bg-transparent focus:outline-none"
-        >
+      {/* Row 2: Fuel type */}
+      <div style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+        className="px-6 py-2 flex items-center gap-3">
+        <span className="text-xs text-white/40 uppercase tracking-wider">Fuel</span>
+        <div className="flex gap-2">
           {FUEL_TYPES.map(f => (
-            <option key={f.value} value={f.value}>{f.label}</option>
+            <button
+              key={f.value}
+              onClick={() => setFuelType(f.value)}
+              className="text-sm px-3 py-1 font-medium"
+              style={{
+                backgroundColor: fuelType === f.value ? '#4c6ef5' : 'transparent',
+                color: fuelType === f.value ? 'white' : 'rgba(255,255,255,0.4)',
+                border: fuelType === f.value ? '1px solid #4c6ef5' : '1px solid rgba(255,255,255,0.1)',
+              }}
+            >
+              {f.value}
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
       {/* Error */}
       {error && (
-        <div className="mx-6 mt-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
+        <div className="mx-6 mt-4 px-4 py-3 text-sm text-red-300"
+          style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}>
           {error}
         </div>
       )}
 
       {/* Loading */}
       {loading && (
-        <div className="text-center py-16 text-gray-400 text-sm">Finding cheapest prices...</div>
+        <div className="text-center py-16 text-white/40 text-sm">Finding cheapest prices...</div>
       )}
 
       {/* Empty state */}
       {!data && !loading && !error && (
-        <div className="text-center py-20 text-gray-400">
+        <div className="text-center py-24 text-white/30">
           <p className="text-4xl mb-3">⛽</p>
-          <p className="text-sm">Search a suburb or use your location to find cheap fuel nearby</p>
+          <p className="text-sm">Search a suburb or use your location</p>
         </div>
       )}
 
       {/* Results */}
       {data && !loading && (
-        <div className="max-w-2xl mx-auto px-4 mt-6 pb-10">
+        <div className="max-w-3xl mx-auto px-6 mt-6 pb-10">
           <div className="flex justify-between items-center mb-4">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-white/40">
               {data.stations.length} stations · avg {avgPrice?.toFixed(1)}¢/L
             </p>
-            <div className="flex bg-gray-100 rounded-lg p-1">
+            <div className="flex" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
               <button
                 onClick={() => setSortMode('price')}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${
-                  sortMode === 'price' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400'
-                }`}
+                className="px-4 py-1.5 text-sm font-medium"
+                style={{
+                  backgroundColor: sortMode === 'price' ? '#4c6ef5' : 'transparent',
+                  color: sortMode === 'price' ? 'white' : 'rgba(255,255,255,0.4)',
+                }}
               >
                 Price
               </button>
               <button
                 onClick={() => setSortMode('distance')}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${
-                  sortMode === 'distance' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400'
-                }`}
+                className="px-4 py-1.5 text-sm font-medium"
+                style={{
+                  backgroundColor: sortMode === 'distance' ? '#4c6ef5' : 'transparent',
+                  color: sortMode === 'distance' ? 'white' : 'rgba(255,255,255,0.4)',
+                  borderLeft: '1px solid rgba(255,255,255,0.1)',
+                }}
               >
                 Distance
               </button>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {getSortedStations().map(({ station, price }, index) => {
               const saving = avgPrice ? (avgPrice - price!.price).toFixed(1) : null
 
               return (
-                <div key={station.code} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                <div
+                  key={station.code}
+                  className="p-4"
+                  style={{ backgroundColor: '#1a2150', borderLeft: index === 0 && sortMode === 'price' ? '3px solid #22c55e' : index === 0 && sortMode === 'distance' ? '3px solid #4c6ef5' : '3px solid transparent' }}
+                >
                   <div className="flex justify-between items-start">
                     <div className="flex-1 pr-4">
                       <div className="flex items-center gap-2 mb-1">
                         {index === 0 && sortMode === 'price' && (
-                          <span className="bg-green-50 text-green-600 text-xs px-2 py-0.5 rounded-full font-medium border border-green-100">
-                            Cheapest
-                          </span>
+                          <span className="text-xs font-medium text-green-400">CHEAPEST</span>
                         )}
                         {index === 0 && sortMode === 'distance' && (
-                          <span className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded-full font-medium border border-blue-100">
-                            Closest
-                          </span>
+                          <span className="text-xs font-medium text-blue-400">CLOSEST</span>
                         )}
                       </div>
-                      <h2 className="font-semibold text-gray-900">{station.name}</h2>
-                      <p className="text-gray-400 text-sm mt-0.5">{station.address}</p>
-                      <p className="text-gray-400 text-sm mt-1">
+                      <h2 className="font-semibold text-white text-sm">{station.name}</h2>
+                      <p className="text-white/30 text-xs mt-0.5">{station.address}</p>
+                      <p className="text-white/30 text-xs mt-1">
                         📍 {station.location.distance.toFixed(1)} km away
                       </p>
                     </div>
@@ -248,11 +264,9 @@ function App() {
                       <p className={`text-3xl font-bold ${getPriceColor(price!.price)}`}>
                         {price!.price}
                       </p>
-                      <p className="text-gray-400 text-xs">¢/litre</p>
+                      <p className="text-white/30 text-xs">¢/litre</p>
                       {saving && parseFloat(saving) > 0 && (
-                        <p className="text-green-500 text-xs mt-1">
-                          Save {saving}¢/L
-                        </p>
+                        <p className="text-green-400 text-xs mt-1">Save {saving}¢</p>
                       )}
                     </div>
                   </div>
