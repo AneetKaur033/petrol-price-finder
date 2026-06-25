@@ -44,6 +44,7 @@ function App() {
   const [locationLoading, setLocationLoading] = useState(false)
   const [sortMode, setSortMode] = useState<SortMode>('price')
   const [lastSearchCoords, setLastSearchCoords] = useState<{lat: number, lng: number} | null>(null)
+  const [searchLabel, setSearchLabel] = useState<string | null>(null)
 
   const RADIUS = 3
 
@@ -69,11 +70,14 @@ function App() {
     setError(null)
     try {
       const geoRes = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(search + ', NSW, Australia')}&format=json&limit=1`
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(search + ', NSW, Australia')}&format=json&limit=1&addressdetails=1`
       )
       const geoData = await geoRes.json()
       if (!geoData.length) throw new Error('Suburb or postcode not found')
-      const { lat, lon } = geoData[0]
+      const { lat, lon, address } = geoData[0]
+      const suburb = address?.suburb || address?.town || address?.village || search
+      const postcode = address?.postcode || ''
+      setSearchLabel(`${suburb}${postcode ? ` (${postcode})` : ''}`)
       await fetchByCoords(parseFloat(lat), parseFloat(lon), fuelType)
     } catch (e: any) {
       setError(e.message || 'Failed to find location')
@@ -86,6 +90,17 @@ function App() {
     setError(null)
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
+        // Reverse geocode to get suburb name
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`
+          )
+          const data = await res.json()
+          const suburb = data?.address?.suburb || data?.address?.town || 'your location'
+          setSearchLabel(suburb)
+        } catch {
+          setSearchLabel('your location')
+        }
         await fetchByCoords(pos.coords.latitude, pos.coords.longitude, fuelType)
         setLocationLoading(false)
       },
@@ -134,57 +149,62 @@ function App() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#0f1535', color: 'white' }}>
 
-      {/* Row 1: Nav */}
+      {/* Row 1: Nav — stacks on mobile */}
       <div
         style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-        className="px-6 flex items-stretch gap-3"
+        className="px-4 py-3 flex flex-col gap-2 md:flex-row md:items-stretch md:gap-3"
       >
-        <h1 className="text-lg font-bold flex items-center shrink-0 py-3">
+        {/* Logo */}
+        <h1 className="text-lg font-bold flex items-center shrink-0">
           fuel<span style={{ color: '#4c6ef5' }}>finder</span>
         </h1>
 
-        <button
-          onClick={handleUseLocation}
-          disabled={locationLoading}
-          className="shrink-0 text-sm font-semibold flex items-center gap-1.5 px-4 my-3"
-          style={{ backgroundColor: '#4c6ef5', color: 'white' }}
-        >
-          📍 {locationLoading ? 'Locating...' : 'Use my location'}
-        </button>
-
-        <div
-          className="flex-1 flex items-center gap-2 px-3 my-3"
-          style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)' }}
-        >
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            placeholder="Or enter suburb / postcode e.g. Bondi, 2026"
-            className="flex-1 bg-transparent text-sm text-white placeholder-white/30 focus:outline-none py-2"
-          />
+        {/* Location + Search row on mobile */}
+        <div className="flex gap-2 flex-1">
           <button
-            onClick={handleSearch}
-            disabled={loading}
-            className="text-sm font-medium px-3 py-1 shrink-0"
+            onClick={handleUseLocation}
+            disabled={locationLoading}
+            className="shrink-0 text-sm font-semibold flex items-center gap-1.5 px-3 py-2 md:px-4"
             style={{ backgroundColor: '#4c6ef5', color: 'white' }}
           >
-            Search
+            📍 <span className="hidden sm:inline">{locationLoading ? 'Locating...' : 'Use my location'}</span>
+            <span className="sm:hidden">{locationLoading ? '...' : 'My location'}</span>
           </button>
+
+          <div
+            className="flex-1 flex items-center gap-2 px-3 py-2"
+            style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              placeholder="Suburb or postcode"
+              className="flex-1 bg-transparent text-sm text-white placeholder-white/30 focus:outline-none min-w-0"
+            />
+            <button
+              onClick={handleSearch}
+              disabled={loading}
+              className="text-sm font-medium px-3 py-1 shrink-0"
+              style={{ backgroundColor: '#4c6ef5', color: 'white' }}
+            >
+              Search
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Row 2: Fuel type */}
+      {/* Row 2: Fuel type — scrollable on mobile */}
       <div
         style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-        className="px-6 py-2 flex items-center gap-2"
+        className="px-4 py-2 flex items-center gap-2 overflow-x-auto"
       >
         {FUEL_TYPES.map(f => (
           <button
             key={f.value}
             onClick={() => handleFuelTypeChange(f.value)}
-            className="text-sm px-3 py-1 font-medium"
+            className="text-sm px-3 py-1 font-medium shrink-0"
             style={{
               backgroundColor: fuelType === f.value ? '#4c6ef5' : 'transparent',
               color: fuelType === f.value ? 'white' : 'rgba(255,255,255,0.4)',
@@ -199,7 +219,7 @@ function App() {
       {/* Error */}
       {error && (
         <div
-          className="mx-6 mt-4 px-4 py-3 text-sm text-red-300"
+          className="mx-4 mt-4 px-4 py-3 text-sm text-red-300"
           style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}
         >
           {error}
@@ -213,7 +233,7 @@ function App() {
 
       {/* Empty state */}
       {!data && !loading && !error && (
-        <div className="text-center py-24 text-white/30">
+        <div className="text-center py-24 text-white/30 px-4">
           <p className="text-4xl mb-3">⛽</p>
           <p className="text-sm">Use your location or search a suburb to find cheap fuel nearby</p>
         </div>
@@ -221,78 +241,103 @@ function App() {
 
       {/* Results */}
       {data && !loading && (
-        <div className="px-6 mt-5 pb-10">
-          <div className="flex justify-between items-center mb-3">
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-white/30 uppercase tracking-wider">Sort by</span>
-              <div className="flex" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
-                <button
-                  onClick={() => setSortMode('price')}
-                  className="px-4 py-1.5 text-sm font-medium"
-                  style={{
-                    backgroundColor: sortMode === 'price' ? '#4c6ef5' : 'transparent',
-                    color: sortMode === 'price' ? 'white' : 'rgba(255,255,255,0.4)',
-                  }}
-                >
-                  Price
-                </button>
-                <button
-                  onClick={() => setSortMode('distance')}
-                  className="px-4 py-1.5 text-sm font-medium"
-                  style={{
-                    backgroundColor: sortMode === 'distance' ? '#4c6ef5' : 'transparent',
-                    color: sortMode === 'distance' ? 'white' : 'rgba(255,255,255,0.4)',
-                    borderLeft: '1px solid rgba(255,255,255,0.1)',
-                  }}
-                >
-                  Distance
-                </button>
-              </div>
-            </div>
-            <p className="text-sm text-white/40">
-              {data.stations.length} stations · avg {avgPrice?.toFixed(1)}¢/L
+        <div className="px-4 mt-5 pb-10">
+
+          {/* Search label */}
+          {searchLabel && (
+            <p className="text-xs text-white/30 mb-3">
+              📍 Showing results near <span className="text-white/60 font-medium">{searchLabel}</span> within {RADIUS}km
             </p>
-          </div>
+          )}
 
-          <div className="space-y-1">
-            {getSortedStations().map(({ station, price }, index) => {
-              const saving = avgPrice ? (avgPrice - price!.price).toFixed(1) : null
+          {/* No results state */}
+          {data.stations.length === 0 && (
+            <div
+              className="px-4 py-8 text-center"
+              style={{ backgroundColor: '#1a2150' }}
+            >
+              <p className="text-white/40 text-sm">No stations found within {RADIUS}km of {searchLabel || 'this location'}.</p>
+              <p className="text-white/30 text-xs mt-2">Try searching a nearby suburb or increase your search area.</p>
+            </div>
+          )}
 
-              return (
-                <div
-                  key={station.code}
-                  className="flex justify-between items-center"
-                  style={{
-                    backgroundColor: '#1a2150',
-                    borderLeft: index === 0 ? '3px solid #22c55e' : '3px solid transparent',
-                    marginBottom: '2px',
-                    padding: '14px 16px',
-                  }}
-                >
-                  <div className="shrink-0 mr-6 text-left">
-                    <p className={`text-4xl font-bold leading-none ${getPriceColor(price!.price)}`}>
-                      {price!.price}
-                    </p>
-                    <p className="text-white/40 text-xs mt-1">¢/litre</p>
-                    {saving && parseFloat(saving) > 0 && (
-                      <p className="text-green-400 text-xs mt-1">Save {saving}¢</p>
-                    )}
-                  </div>
-
-                  <div className="flex-1">
-                    {index === 0 && (
-                      <p className="text-xs font-semibold mb-1 text-green-400">
-                        {sortMode === 'price' ? 'CHEAPEST' : 'CLOSEST'}
-                      </p>
-                    )}
-                    <h2 className="font-bold text-white text-base leading-tight">{station.name}</h2>
-                    <p className="text-white/40 text-xs mt-1">{station.address}</p>
-                    <p className="text-white/30 text-xs mt-1">📍 {station.location.distance.toFixed(1)} km away</p>
+          {data.stations.length > 0 && (
+            <>
+              <div className="flex justify-between items-center mb-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-white/30 uppercase tracking-wider hidden sm:inline">Sort by</span>
+                  <div className="flex" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <button
+                      onClick={() => setSortMode('price')}
+                      className="px-3 py-1.5 text-sm font-medium"
+                      style={{
+                        backgroundColor: sortMode === 'price' ? '#4c6ef5' : 'transparent',
+                        color: sortMode === 'price' ? 'white' : 'rgba(255,255,255,0.4)',
+                      }}
+                    >
+                      Price
+                    </button>
+                    <button
+                      onClick={() => setSortMode('distance')}
+                      className="px-3 py-1.5 text-sm font-medium"
+                      style={{
+                        backgroundColor: sortMode === 'distance' ? '#4c6ef5' : 'transparent',
+                        color: sortMode === 'distance' ? 'white' : 'rgba(255,255,255,0.4)',
+                        borderLeft: '1px solid rgba(255,255,255,0.1)',
+                      }}
+                    >
+                      Distance
+                    </button>
                   </div>
                 </div>
-              )
-            })}
-          </div>
+                <p className="text-xs text-white/40">
+                  {data.stations.length} stations · avg {avgPrice?.toFixed(1)}¢/L
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                {getSortedStations().map(({ station, price }, index) => {
+                  const saving = avgPrice ? (avgPrice - price!.price).toFixed(1) : null
+
+                  return (
+                    <div
+                      key={station.code}
+                      className="flex items-center"
+                      style={{
+                        backgroundColor: '#1a2150',
+                        borderLeft: index === 0 ? '3px solid #22c55e' : '3px solid transparent',
+                        marginBottom: '2px',
+                        padding: '12px 16px',
+                      }}
+                    >
+                      {/* Price */}
+                      <div className="shrink-0 mr-4 text-left w-20">
+                        <p className={`text-3xl font-bold leading-none ${getPriceColor(price!.price)}`}>
+                          {price!.price}
+                        </p>
+                        <p className="text-white/40 text-xs mt-1">¢/litre</p>
+                        {saving && parseFloat(saving) > 0 && (
+                          <p className="text-green-400 text-xs mt-1">Save {saving}¢</p>
+                        )}
+                      </div>
+
+                      {/* Station info */}
+                      <div className="flex-1 min-w-0">
+                        {index === 0 && (
+                          <p className="text-xs font-semibold mb-0.5 text-green-400">
+                            {sortMode === 'price' ? 'CHEAPEST' : 'CLOSEST'}
+                          </p>
+                        )}
+                        <h2 className="font-bold text-white text-sm leading-tight truncate">{station.name}</h2>
+                        <p className="text-white/40 text-xs mt-0.5 truncate">{station.address}</p>
+                        <p className="text-white/30 text-xs mt-0.5">📍 {station.location.distance.toFixed(1)} km away</p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
