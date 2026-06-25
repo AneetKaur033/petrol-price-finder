@@ -90,7 +90,6 @@ function App() {
     setError(null)
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        // Reverse geocode to get suburb name
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`
@@ -149,17 +148,15 @@ function App() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#0f1535', color: 'white' }}>
 
-      {/* Row 1: Nav — stacks on mobile */}
+      {/* Row 1: Nav */}
       <div
         style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
         className="px-4 py-3 flex flex-col gap-2 md:flex-row md:items-stretch md:gap-3"
       >
-        {/* Logo */}
         <h1 className="text-lg font-bold flex items-center shrink-0">
           fuel<span style={{ color: '#4c6ef5' }}>finder</span>
         </h1>
 
-        {/* Location + Search row on mobile */}
         <div className="flex gap-2 flex-1">
           <button
             onClick={handleUseLocation}
@@ -181,7 +178,7 @@ function App() {
               onChange={e => setSearch(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
               placeholder="Suburb or postcode"
-              className="flex-1 bg-transparent text-sm text-white placeholder-white/30 focus:outline-none min-w-0"
+              className="flex-1 bg-transparent text-sm text-white placeholder-white/60 focus:outline-none min-w-0"
             />
             <button
               onClick={handleSearch}
@@ -195,7 +192,7 @@ function App() {
         </div>
       </div>
 
-      {/* Row 2: Fuel type — scrollable on mobile */}
+      {/* Row 2: Fuel type */}
       <div
         style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
         className="px-4 py-2 flex items-center gap-2 overflow-x-auto"
@@ -207,8 +204,8 @@ function App() {
             className="text-sm px-3 py-1 font-medium shrink-0"
             style={{
               backgroundColor: fuelType === f.value ? '#4c6ef5' : 'transparent',
-              color: fuelType === f.value ? 'white' : 'rgba(255,255,255,0.4)',
-              border: fuelType === f.value ? '1px solid #4c6ef5' : '1px solid rgba(255,255,255,0.1)',
+              color: fuelType === f.value ? 'white' : 'rgba(255,255,255,0.85)',
+              border: fuelType === f.value ? '1px solid #4c6ef5' : '1px solid rgba(255,255,255,0.2)',
             }}
           >
             {f.label}
@@ -228,12 +225,12 @@ function App() {
 
       {/* Loading */}
       {loading && (
-        <div className="text-center py-16 text-white/40 text-sm">Finding cheapest prices...</div>
+        <div className="text-center py-16 text-white/60 text-sm">Finding cheapest prices...</div>
       )}
 
       {/* Empty state */}
       {!data && !loading && !error && (
-        <div className="text-center py-24 text-white/30 px-4">
+        <div className="text-center py-24 px-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
           <p className="text-4xl mb-3">⛽</p>
           <p className="text-sm">Use your location or search a suburb to find cheap fuel nearby</p>
         </div>
@@ -245,8 +242,8 @@ function App() {
 
           {/* Search label */}
           {searchLabel && (
-            <p className="text-xs text-white/30 mb-3">
-              📍 Showing results near <span className="text-white/60 font-medium">{searchLabel}</span> within {RADIUS}km
+            <p className="text-xs mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              📍 Showing results near <span className="font-semibold" style={{ color: 'white' }}>{searchLabel}</span> within {RADIUS}km
             </p>
           )}
 
@@ -256,8 +253,12 @@ function App() {
               className="px-4 py-8 text-center"
               style={{ backgroundColor: '#1a2150' }}
             >
-              <p className="text-white/40 text-sm">No stations found within {RADIUS}km of {searchLabel || 'this location'}.</p>
-              <p className="text-white/30 text-xs mt-2">Try searching a nearby suburb or increase your search area.</p>
+              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                No stations found within {RADIUS}km of {searchLabel || 'this location'}.
+              </p>
+              <p className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                Try searching a nearby suburb.
+              </p>
             </div>
           )}
 
@@ -265,14 +266,19 @@ function App() {
             <>
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-white/30 uppercase tracking-wider hidden sm:inline">Sort by</span>
-                  <div className="flex" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <span
+                    className="text-xs uppercase tracking-wider hidden sm:inline"
+                    style={{ color: 'rgba(255,255,255,0.7)' }}
+                  >
+                    Sort by
+                  </span>
+                  <div className="flex" style={{ border: '1px solid rgba(255,255,255,0.2)' }}>
                     <button
                       onClick={() => setSortMode('price')}
                       className="px-3 py-1.5 text-sm font-medium"
                       style={{
                         backgroundColor: sortMode === 'price' ? '#4c6ef5' : 'transparent',
-                        color: sortMode === 'price' ? 'white' : 'rgba(255,255,255,0.4)',
+                        color: sortMode === 'price' ? 'white' : 'rgba(255,255,255,0.85)',
                       }}
                     >
                       Price
@@ -282,15 +288,15 @@ function App() {
                       className="px-3 py-1.5 text-sm font-medium"
                       style={{
                         backgroundColor: sortMode === 'distance' ? '#4c6ef5' : 'transparent',
-                        color: sortMode === 'distance' ? 'white' : 'rgba(255,255,255,0.4)',
-                        borderLeft: '1px solid rgba(255,255,255,0.1)',
+                        color: sortMode === 'distance' ? 'white' : 'rgba(255,255,255,0.85)',
+                        borderLeft: '1px solid rgba(255,255,255,0.2)',
                       }}
                     >
                       Distance
                     </button>
                   </div>
                 </div>
-                <p className="text-xs text-white/40">
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
                   {data.stations.length} stations · avg {avgPrice?.toFixed(1)}¢/L
                 </p>
               </div>
@@ -315,7 +321,7 @@ function App() {
                         <p className={`text-3xl font-bold leading-none ${getPriceColor(price!.price)}`}>
                           {price!.price}
                         </p>
-                        <p className="text-white/40 text-xs mt-1">¢/litre</p>
+                        <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>¢/litre</p>
                         {saving && parseFloat(saving) > 0 && (
                           <p className="text-green-400 text-xs mt-1">Save {saving}¢</p>
                         )}
@@ -329,8 +335,8 @@ function App() {
                           </p>
                         )}
                         <h2 className="font-bold text-white text-sm leading-tight truncate">{station.name}</h2>
-                        <p className="text-white/40 text-xs mt-0.5 truncate">{station.address}</p>
-                        <p className="text-white/30 text-xs mt-0.5">📍 {station.location.distance.toFixed(1)} km away</p>
+                        <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.6)' }}>{station.address}</p>
+                        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>📍 {station.location.distance.toFixed(1)} km away</p>
                       </div>
                     </div>
                   )
