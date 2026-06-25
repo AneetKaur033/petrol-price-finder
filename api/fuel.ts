@@ -4,7 +4,7 @@ const API_KEY = process.env.VITE_API_KEY || '';
 const API_SECRET = process.env.VITE_API_SECRET || '';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const { lat = '-33.8688', lng = '151.2093', radius = '5' } = req.query;
+  const { lat = '-33.8688', lng = '151.2093', radius = '5', fueltype = 'E10' } = req.query;
 
   const credentials = Buffer.from(`${API_KEY}:${API_SECRET}`).toString('base64');
   const tokenResponse = await fetch(
@@ -39,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'requesttimestamp': timestamp,
       },
       body: JSON.stringify({
-        fueltype: 'E10',
+        fueltype: fueltype,
         brand: [],
         latitude: lat,
         longitude: lng,
