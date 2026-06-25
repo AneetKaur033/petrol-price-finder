@@ -45,6 +45,7 @@ function App() {
   const [sortMode, setSortMode] = useState<SortMode>('price')
   const [lastSearchCoords, setLastSearchCoords] = useState<{lat: number, lng: number} | null>(null)
   const [searchLabel, setSearchLabel] = useState<string | null>(null)
+  const [activeFuel, setActiveFuel] = useState('E10')
 
   const RADIUS = 3
 
@@ -57,6 +58,7 @@ function App() {
       if (json.errorDetails) throw new Error(json.errorDetails.message)
       setData(json)
       setLastSearchCoords({ lat, lng })
+      setActiveFuel(fuel)
     } catch (e: any) {
       setError(e.message || 'Failed to fetch prices')
     } finally {
@@ -118,11 +120,15 @@ function App() {
   }
 
   const getPrice = (stationCode: number) => {
-    return data?.prices.find(p => p.stationcode === stationCode)
+    return data?.prices.find(p => p.stationcode === stationCode && p.fueltype === activeFuel)
   }
 
   const avgPrice = data
-    ? data.prices.reduce((sum, p) => sum + p.price, 0) / data.prices.length
+    ? (() => {
+        const prices = data.prices.filter(p => p.fueltype === activeFuel)
+        if (!prices.length) return null
+        return prices.reduce((sum, p) => sum + p.price, 0) / prices.length
+      })()
     : null
 
   const getPriceColor = (price: number) => {
@@ -240,19 +246,14 @@ function App() {
       {data && !loading && (
         <div className="px-4 mt-5 pb-10">
 
-          {/* Search label */}
           {searchLabel && (
             <p className="text-xs mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
               📍 Showing results near <span className="font-semibold" style={{ color: 'white' }}>{searchLabel}</span> within {RADIUS}km
             </p>
           )}
 
-          {/* No results state */}
           {data.stations.length === 0 && (
-            <div
-              className="px-4 py-8 text-center"
-              style={{ backgroundColor: '#1a2150' }}
-            >
+            <div className="px-4 py-8 text-center" style={{ backgroundColor: '#1a2150' }}>
               <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
                 No stations found within {RADIUS}km of {searchLabel || 'this location'}.
               </p>
@@ -266,10 +267,7 @@ function App() {
             <>
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-3">
-                  <span
-                    className="text-xs uppercase tracking-wider hidden sm:inline"
-                    style={{ color: 'rgba(255,255,255,0.7)' }}
-                  >
+                  <span className="text-xs uppercase tracking-wider hidden sm:inline" style={{ color: 'rgba(255,255,255,0.7)' }}>
                     Sort by
                   </span>
                   <div className="flex" style={{ border: '1px solid rgba(255,255,255,0.2)' }}>
@@ -316,7 +314,6 @@ function App() {
                         padding: '12px 16px',
                       }}
                     >
-                      {/* Price */}
                       <div className="shrink-0 mr-4 text-left w-20">
                         <p className={`text-3xl font-bold leading-none ${getPriceColor(price!.price)}`}>
                           {price!.price}
@@ -327,7 +324,6 @@ function App() {
                         )}
                       </div>
 
-                      {/* Station info */}
                       <div className="flex-1 min-w-0">
                         {index === 0 && (
                           <p className="text-xs font-semibold mb-0.5 text-green-400">
