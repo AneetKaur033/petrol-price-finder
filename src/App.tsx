@@ -25,11 +25,11 @@ interface FuelData {
 }
 
 const FUEL_TYPES = [
-  { value: 'E10', label: 'Ethanol 94 (E10)' },
-  { value: 'U91', label: 'Unleaded 91 (U91)' },
-  { value: 'P95', label: 'Premium 95 (P95)' },
-  { value: 'P98', label: 'Premium 98 (P98)' },
-  { value: 'DL', label: 'Diesel (DL)' },
+  { value: 'E10', label: 'E10' },
+  { value: 'U91', label: 'U91' },
+  { value: 'P95', label: 'P95' },
+  { value: 'P98', label: 'P98' },
+  { value: 'DL', label: 'Diesel' },
   { value: 'LPG', label: 'LPG' },
 ]
 
@@ -43,17 +43,21 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [locationLoading, setLocationLoading] = useState(false)
   const [sortMode, setSortMode] = useState<SortMode>('price')
+  const [lastSearchCoords, setLastSearchCoords] = useState<{lat: number, lng: number} | null>(null)
+  const [staleResults, setStaleResults] = useState(false)
 
   const RADIUS = 3
 
-  async function fetchByCoords(lat: number, lng: number) {
+  async function fetchByCoords(lat: number, lng: number, fuel: string = fuelType) {
     setLoading(true)
     setError(null)
+    setStaleResults(false)
     try {
-      const res = await fetch(`/api/fuel?lat=${lat}&lng=${lng}&radius=${RADIUS}&fueltype=${fuelType}`)
+      const res = await fetch(`/api/fuel?lat=${lat}&lng=${lng}&radius=${RADIUS}&fueltype=${fuel}`)
       const json = await res.json()
       if (json.errorDetails) throw new Error(json.errorDetails.message)
       setData(json)
+      setLastSearchCoords({ lat, lng })
     } catch (e: any) {
       setError(e.message || 'Failed to fetch prices')
     } finally {
@@ -72,7 +76,7 @@ function App() {
       const geoData = await geoRes.json()
       if (!geoData.length) throw new Error('Suburb or postcode not found')
       const { lat, lon } = geoData[0]
-      await fetchByCoords(parseFloat(lat), parseFloat(lon))
+      await fetchByCoords(parseFloat(lat), parseFloat(lon), fuelType)
     } catch (e: any) {
       setError(e.message || 'Failed to find location')
       setLoading(false)
@@ -84,7 +88,7 @@ function App() {
     setError(null)
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        await fetchByCoords(pos.coords.latitude, pos.coords.longitude)
+        await fetchByCoords(pos.coords.latitude, pos.coords.longitude, fuelType)
         setLocationLoading(false)
       },
       () => {
@@ -92,6 +96,13 @@ function App() {
         setLocationLoading(false)
       }
     )
+  }
+
+  function handleFuelTypeChange(newFuel: string) {
+    setFuelType(newFuel)
+    if (data && lastSearchCoords) {
+      setStaleResults(true)
+    }
   }
 
   const getPrice = (stationCode: number) => {
@@ -127,7 +138,7 @@ function App() {
 
       {/* Row 1: Nav */}
       <div style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-        className="px-6 py-3 flex items-center gap-4">
+        className="px-6 py-3 flex items-center gap-3">
         <h1 className="text-lg font-bold shrink-0">
           fuel<span style={{ color: '#4c6ef5' }}>finder</span>
         </h1>
@@ -142,44 +153,54 @@ function App() {
             placeholder="Enter suburb or postcode e.g. Bondi, 2026"
             className="flex-1 bg-transparent text-sm text-white placeholder-white/30 focus:outline-none"
           />
-          <button onClick={handleSearch} disabled={loading}>
-            <svg className="w-4 h-4" style={{ color: '#4c6ef5' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+          <button onClick={handleSearch} disabled={loading} className="flex items-center gap-1.5 text-sm font-medium px-3 py-1" style={{ backgroundColor: '#4c6ef5', color: 'white' }}>
+            Search
+          </button>
+          <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)', height: '16px' }} />
+          <button
+            onClick={handleUseLocation}
+            disabled={locationLoading}
+            className="text-sm font-medium flex items-center gap-1.5 px-2"
+            style={{ color: '#4c6ef5' }}
+          >
+            📍 {locationLoading ? 'Locating...' : 'My location'}
           </button>
         </div>
-
-        <button
-          onClick={handleUseLocation}
-          disabled={locationLoading}
-          className="shrink-0 text-sm font-medium px-3 py-2 flex items-center gap-1.5"
-          style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)', color: '#4c6ef5' }}
-        >
-          📍 {locationLoading ? 'Locating...' : 'My location'}
-        </button>
       </div>
 
       {/* Row 2: Fuel type */}
       <div style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-        className="px-6 py-2 flex items-center gap-3">
-        <span className="text-xs text-white/40 uppercase tracking-wider">Fuel</span>
-        <div className="flex gap-2">
-          {FUEL_TYPES.map(f => (
-            <button
-              key={f.value}
-              onClick={() => setFuelType(f.value)}
-              className="text-sm px-3 py-1 font-medium"
-              style={{
-                backgroundColor: fuelType === f.value ? '#4c6ef5' : 'transparent',
-                color: fuelType === f.value ? 'white' : 'rgba(255,255,255,0.4)',
-                border: fuelType === f.value ? '1px solid #4c6ef5' : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              {f.value}
-            </button>
-          ))}
-        </div>
+        className="px-6 py-2 flex items-center gap-2">
+        {FUEL_TYPES.map(f => (
+          <button
+            key={f.value}
+            onClick={() => handleFuelTypeChange(f.value)}
+            className="text-sm px-3 py-1 font-medium"
+            style={{
+              backgroundColor: fuelType === f.value ? '#4c6ef5' : 'transparent',
+              color: fuelType === f.value ? 'white' : 'rgba(255,255,255,0.4)',
+              border: fuelType === f.value ? '1px solid #4c6ef5' : '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
+
+      {/* Stale results warning */}
+      {staleResults && data && lastSearchCoords && (
+        <div className="px-6 py-2 flex items-center justify-between text-sm"
+          style={{ backgroundColor: 'rgba(76,110,245,0.15)', borderBottom: '1px solid rgba(76,110,245,0.3)' }}>
+          <span style={{ color: 'rgba(255,255,255,0.6)' }}>Fuel type changed — results are for previous selection</span>
+          <button
+            onClick={() => fetchByCoords(lastSearchCoords.lat, lastSearchCoords.lng, fuelType)}
+            className="font-semibold"
+            style={{ color: '#4c6ef5' }}
+          >
+            Update results →
+          </button>
+        </div>
+      )}
 
       {/* Error */}
       {error && (
@@ -204,8 +225,8 @@ function App() {
 
       {/* Results */}
       {data && !loading && (
-        <div className="max-w-3xl mx-auto px-6 mt-6 pb-10">
-          <div className="flex justify-between items-center mb-4">
+        <div className="px-6 mt-5 pb-10">
+          <div className="flex justify-between items-center mb-3">
             <p className="text-sm text-white/40">
               {data.stations.length} stations · avg {avgPrice?.toFixed(1)}¢/L
             </p>
@@ -234,41 +255,43 @@ function App() {
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1">
             {getSortedStations().map(({ station, price }, index) => {
               const saving = avgPrice ? (avgPrice - price!.price).toFixed(1) : null
 
               return (
                 <div
                   key={station.code}
-                  className="p-4"
-                  style={{ backgroundColor: '#1a2150', borderLeft: index === 0 && sortMode === 'price' ? '3px solid #22c55e' : index === 0 && sortMode === 'distance' ? '3px solid #4c6ef5' : '3px solid transparent' }}
+                  className="p-4 flex justify-between items-center"
+                  style={{
+                    backgroundColor: '#1a2150',
+                    borderLeft: index === 0 && sortMode === 'price'
+                      ? '3px solid #22c55e'
+                      : index === 0 && sortMode === 'distance'
+                      ? '3px solid #4c6ef5'
+                      : '3px solid transparent',
+                    marginBottom: '2px'
+                  }}
                 >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1 pr-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        {index === 0 && sortMode === 'price' && (
-                          <span className="text-xs font-medium text-green-400">CHEAPEST</span>
-                        )}
-                        {index === 0 && sortMode === 'distance' && (
-                          <span className="text-xs font-medium text-blue-400">CLOSEST</span>
-                        )}
-                      </div>
-                      <h2 className="font-semibold text-white text-sm">{station.name}</h2>
-                      <p className="text-white/30 text-xs mt-0.5">{station.address}</p>
-                      <p className="text-white/30 text-xs mt-1">
-                        📍 {station.location.distance.toFixed(1)} km away
+                  <div className="flex-1 pr-6">
+                    {index === 0 && (
+                      <p className="text-xs font-semibold mb-1"
+                        style={{ color: sortMode === 'price' ? '#22c55e' : '#4c6ef5' }}>
+                        {sortMode === 'price' ? 'CHEAPEST' : 'CLOSEST'}
                       </p>
-                    </div>
-                    <div className="text-right">
-                      <p className={`text-3xl font-bold ${getPriceColor(price!.price)}`}>
-                        {price!.price}
-                      </p>
-                      <p className="text-white/30 text-xs">¢/litre</p>
-                      {saving && parseFloat(saving) > 0 && (
-                        <p className="text-green-400 text-xs mt-1">Save {saving}¢</p>
-                      )}
-                    </div>
+                    )}
+                    <h2 className="font-bold text-white text-base leading-tight">{station.name}</h2>
+                    <p className="text-white/40 text-xs mt-1">{station.address}</p>
+                    <p className="text-white/30 text-xs mt-1">📍 {station.location.distance.toFixed(1)} km away</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className={`text-4xl font-bold leading-none ${getPriceColor(price!.price)}`}>
+                      {price!.price}
+                    </p>
+                    <p className="text-white/40 text-sm mt-1">¢/litre</p>
+                    {saving && parseFloat(saving) > 0 && (
+                      <p className="text-green-400 text-xs mt-1">Save {saving}¢</p>
+                    )}
                   </div>
                 </div>
               )
