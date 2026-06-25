@@ -143,6 +143,15 @@ function App() {
           fuel<span style={{ color: '#4c6ef5' }}>finder</span>
         </h1>
 
+        <button
+          onClick={handleUseLocation}
+          disabled={locationLoading}
+          className="shrink-0 text-sm font-semibold flex items-center gap-1.5 px-4 py-2"
+          style={{ backgroundColor: '#4c6ef5', color: 'white' }}
+        >
+          📍 {locationLoading ? 'Locating...' : 'Use my location'}
+        </button>
+
         <div className="flex-1 flex items-center gap-2 px-3 py-2"
           style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)' }}>
           <input
@@ -150,20 +159,16 @@ function App() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            placeholder="Enter suburb or postcode e.g. Bondi, 2026"
+            placeholder="Or enter suburb / postcode"
             className="flex-1 bg-transparent text-sm text-white placeholder-white/30 focus:outline-none"
           />
-          <button onClick={handleSearch} disabled={loading} className="flex items-center gap-1.5 text-sm font-medium px-3 py-1" style={{ backgroundColor: '#4c6ef5', color: 'white' }}>
-            Search
-          </button>
-          <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.1)', height: '16px' }} />
           <button
-            onClick={handleUseLocation}
-            disabled={locationLoading}
-            className="text-sm font-medium flex items-center gap-1.5 px-2"
-            style={{ color: '#4c6ef5' }}
+            onClick={handleSearch}
+            disabled={loading}
+            className="text-sm font-medium px-3 py-1"
+            style={{ backgroundColor: '#4c6ef5', color: 'white' }}
           >
-            📍 {locationLoading ? 'Locating...' : 'My location'}
+            Search
           </button>
         </div>
       </div>
@@ -219,7 +224,7 @@ function App() {
       {!data && !loading && !error && (
         <div className="text-center py-24 text-white/30">
           <p className="text-4xl mb-3">⛽</p>
-          <p className="text-sm">Search a suburb or use your location</p>
+          <p className="text-sm">Use your location or search a suburb to find cheap fuel nearby</p>
         </div>
       )}
 
