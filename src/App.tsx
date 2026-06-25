@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 
 interface Station {
   code: number
@@ -24,13 +24,6 @@ interface FuelData {
   prices: Price[]
 }
 
-interface Suggestion {
-  display_name: string
-  lat: string
-  lon: string
-  label: string
-}
-
 const FUEL_TYPES = [
   { value: 'E10', label: 'E10' },
   { value: 'U91', label: 'U91' },
@@ -51,69 +44,8 @@ function App() {
   const [locationLoading, setLocationLoading] = useState(false)
   const [sortMode, setSortMode] = useState<SortMode>('price')
   const [lastSearchCoords, setLastSearchCoords] = useState<{lat: number, lng: number} | null>(null)
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const [suggestionsLoading, setSuggestionsLoading] = useState(false)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const searchRef = useRef<HTMLDivElement>(null)
 
   const RADIUS = 3
-
-  // Close suggestions when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  // Debounced autocomplete
-  useEffect(() => {
-    if (search.length < 2) {
-      setSuggestions([])
-      setShowSuggestions(false)
-      return
-    }
-
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-
-    debounceRef.current = setTimeout(async () => {
-      setSuggestionsLoading(true)
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(search + ', NSW, Australia')}&format=json&limit=6&addressdetails=1&featuretype=settlement`
-        )
-        const results = await res.json()
-
-        const filtered = results
-          .filter((r: any) => {
-            const state = r.address?.state
-            return state === 'New South Wales'
-          })
-          .map((r: any) => {
-            const suburb = r.address?.suburb || r.address?.town || r.address?.village || r.address?.county || r.name
-            const postcode = r.address?.postcode || ''
-            const label = postcode ? `${suburb} (${postcode})` : suburb
-            return {
-              display_name: r.display_name,
-              lat: r.lat,
-              lon: r.lon,
-              label,
-            }
-          })
-
-        setSuggestions(filtered)
-        setShowSuggestions(filtered.length > 0)
-      } catch {
-        setSuggestions([])
-      } finally {
-        setSuggestionsLoading(false)
-      }
-    }, 300)
-  }, [search])
 
   async function fetchByCoords(lat: number, lng: number, fuel: string) {
     setLoading(true)
@@ -133,7 +65,6 @@ function App() {
 
   async function handleSearch() {
     if (!search.trim()) return
-    setShowSuggestions(false)
     setLoading(true)
     setError(null)
     try {
@@ -148,13 +79,6 @@ function App() {
       setError(e.message || 'Failed to find location')
       setLoading(false)
     }
-  }
-
-  async function handleSelectSuggestion(suggestion: Suggestion) {
-    setSearch(suggestion.label)
-    setShowSuggestions(false)
-    setSuggestions([])
-    await fetchByCoords(parseFloat(suggestion.lat), parseFloat(suggestion.lon), fuelType)
   }
 
   async function handleUseLocation() {
@@ -228,54 +152,26 @@ function App() {
           📍 {locationLoading ? 'Locating...' : 'Use my location'}
         </button>
 
-        {/* Search with autocomplete */}
-        <div className="flex-1 relative my-3" ref={searchRef}>
-          <div
-            className="flex items-center gap-2 px-3 h-full"
-            style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)' }}
+        <div
+          className="flex-1 flex items-center gap-2 px-3 my-3"
+          style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)' }}
+        >
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSearch()}
+            placeholder="Or enter suburb / postcode e.g. Bondi, 2026"
+            className="flex-1 bg-transparent text-sm text-white placeholder-white/30 focus:outline-none py-2"
+          />
+          <button
+            onClick={handleSearch}
+            disabled={loading}
+            className="text-sm font-medium px-3 py-1 shrink-0"
+            style={{ backgroundColor: '#4c6ef5', color: 'white' }}
           >
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSearch()}
-              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-              placeholder="Or enter suburb / postcode e.g. Bondi, 2026"
-              className="flex-1 bg-transparent text-sm text-white placeholder-white/30 focus:outline-none py-2"
-            />
-            {suggestionsLoading && (
-              <span className="text-white/30 text-xs">...</span>
-            )}
-            <button
-              onClick={handleSearch}
-              disabled={loading}
-              className="text-sm font-medium px-3 py-1 shrink-0"
-              style={{ backgroundColor: '#4c6ef5', color: 'white' }}
-            >
-              Search
-            </button>
-          </div>
-
-          {/* Suggestions dropdown */}
-          {showSuggestions && suggestions.length > 0 && (
-            <div
-              className="absolute top-full left-0 right-0 z-50"
-              style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)', borderTop: 'none' }}
-            >
-              {suggestions.map((s, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleSelectSuggestion(s)}
-                  className="w-full text-left px-4 py-2.5 text-sm text-white/80 hover:text-white"
-                  style={{ borderBottom: i < suggestions.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}
-                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(76,110,245,0.2)')}
-                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-                >
-                  📍 {s.label}
-                </button>
-              ))}
-            </div>
-          )}
+            Search
+          </button>
         </div>
       </div>
 
