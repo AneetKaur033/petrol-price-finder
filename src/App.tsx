@@ -323,7 +323,7 @@ function App() {
 
           {searchLabel && (
             <p className="text-xs mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              📍 Showing results near <span className="font-semibold" style={{ color: 'white' }}>{searchLabel}</span> within {RADIUS}km
+              Showing results near <span className="font-semibold" style={{ color: 'white' }}>{searchLabel}</span> within {RADIUS}km
             </p>
           )}
 
