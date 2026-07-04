@@ -53,6 +53,7 @@ function App() {
   const [searchLabel, setSearchLabel] = useState<string | null>(null)
   const [activeFuel, setActiveFuel] = useState('E10')
   const [confirmStation, setConfirmStation] = useState<Station | null>(null)
+  const [expandedStation, setExpandedStation] = useState<number | null>(null)
 
   const RADIUS = 3
 
@@ -126,6 +127,14 @@ function App() {
     }
   }
 
+  function handleCardClick(station: Station, stationIndex: number) {
+    if (expandedStation === stationIndex) {
+      setConfirmStation(station)
+    } else {
+      setExpandedStation(stationIndex)
+    }
+  }
+
   function openGoogleMaps(station: Station) {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(station.address)}`
     window.open(url, '_blank')
@@ -172,10 +181,12 @@ function App() {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center px-4"
           style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+          onClick={() => setConfirmStation(null)}
         >
           <div
             className="w-full max-w-sm p-6"
             style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)' }}
+            onClick={e => e.stopPropagation()}
           >
             <p className="text-white font-bold text-base mb-1">Open in Google Maps?</p>
             <p className="text-sm mb-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
@@ -207,44 +218,51 @@ function App() {
       {/* Row 1: Nav */}
       <div
         style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-        className="px-4 py-3 flex flex-col gap-2 md:flex-row md:items-stretch md:gap-3"
+        className="px-4 py-3 flex items-center gap-3"
       >
-        <h1 className="text-lg font-bold flex items-center shrink-0">
+        <h1 className="text-lg font-bold shrink-0">
           fuel<span style={{ color: '#4c6ef5' }}>finder</span>
         </h1>
 
-        <div className="flex gap-2 flex-1">
+        {/* GPS icon button */}
+        <button
+          onClick={handleUseLocation}
+          disabled={locationLoading}
+          className="shrink-0 flex items-center justify-center w-10 h-10"
+          style={{ backgroundColor: '#4c6ef5', color: 'white' }}
+          title="Use my location"
+        >
+          {locationLoading ? (
+            <span className="text-xs">...</span>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+              <circle cx="12" cy="12" r="9" strokeDasharray="2 4"/>
+            </svg>
+          )}
+        </button>
+
+        <div
+          className="flex-1 flex items-center gap-2 px-3 h-10"
+          style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)' }}
+        >
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSearch()}
+            placeholder="Suburb or postcode"
+            className="flex-1 bg-transparent text-sm text-white placeholder-white/60 focus:outline-none min-w-0"
+          />
           <button
-            onClick={handleUseLocation}
-            disabled={locationLoading}
-            className="shrink-0 text-sm font-semibold flex items-center gap-1.5 px-3 py-2 md:px-4"
+            onClick={handleSearch}
+            disabled={loading}
+            className="text-sm font-medium px-3 py-1 shrink-0"
             style={{ backgroundColor: '#4c6ef5', color: 'white' }}
           >
-            📍 <span className="hidden sm:inline">{locationLoading ? 'Locating...' : 'Use my location'}</span>
-            <span className="sm:hidden">{locationLoading ? '...' : 'My location'}</span>
+            Search
           </button>
-
-          <div
-            className="flex-1 flex items-center gap-2 px-3 py-2"
-            style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)' }}
-          >
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSearch()}
-              placeholder="Suburb or postcode"
-              className="flex-1 bg-transparent text-sm text-white placeholder-white/60 focus:outline-none min-w-0"
-            />
-            <button
-              onClick={handleSearch}
-              disabled={loading}
-              className="text-sm font-medium px-3 py-1 shrink-0"
-              style={{ backgroundColor: '#4c6ef5', color: 'white' }}
-            >
-              Search
-            </button>
-          </div>
         </div>
       </div>
 
@@ -317,7 +335,7 @@ function App() {
             <>
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs uppercase tracking-wider hidden sm:inline" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  <span className="text-xs uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.7)' }}>
                     Sort by
                   </span>
                   <div className="flex" style={{ border: '1px solid rgba(255,255,255,0.2)' }}>
@@ -353,24 +371,26 @@ function App() {
                 {getSortedStations().map(({ station, price }, index) => {
                   const saving = avgPrice ? (avgPrice - price!.price).toFixed(1) : null
                   const membersOnly = isMembersOnly(station.name)
+                  const isExpanded = expandedStation === index
 
                   return (
                     <div
                       key={station.code}
-                      onClick={() => setConfirmStation(station)}
+                      onClick={() => handleCardClick(station, index)}
                       className="flex items-center cursor-pointer"
                       style={{
-                        backgroundColor: '#1a2150',
+                        backgroundColor: isExpanded ? '#1e2a6a' : '#1a2150',
                         borderLeft: index === 0 ? '3px solid #22c55e' : '3px solid transparent',
                         marginBottom: '2px',
                         padding: '12px 16px',
+                        transition: 'background-color 0.15s',
                       }}
                       onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#1e2a6a')}
-                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#1a2150')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = isExpanded ? '#1e2a6a' : '#1a2150')}
                     >
-                      {/* Rank number */}
+                      {/* Rank */}
                       <div
-                        className="shrink-0 mr-4 text-center w-6"
+                        className="shrink-0 mr-4 text-center w-5"
                         style={{ color: index === 0 ? '#22c55e' : 'rgba(255,255,255,0.3)' }}
                       >
                         <p className="text-sm font-bold">{index + 1}</p>
@@ -378,7 +398,7 @@ function App() {
 
                       {/* Station info */}
                       <div className="flex-1 min-w-0 mr-4">
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
                           {index === 0 && (
                             <span className="text-xs font-semibold text-green-400">
                               {sortMode === 'price' ? 'CHEAPEST' : 'CLOSEST'}
@@ -393,14 +413,20 @@ function App() {
                             </span>
                           )}
                         </div>
-                        <h2 className="font-bold text-white text-sm leading-tight mt-0.5">{station.name}</h2>
-                        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>{station.address}</p>
+                        <h2 className="font-bold text-white text-sm leading-tight">{station.name}</h2>
                         <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                          📍 {station.location.distance.toFixed(1)} km away · tap for directions
+                          📍 {station.location.distance.toFixed(1)} km away
                         </p>
+                        {/* Address only shown when expanded */}
+                        {isExpanded && (
+                          <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                            {station.address}
+                            <span className="ml-2" style={{ color: '#4c6ef5' }}>Tap again for directions →</span>
+                          </p>
+                        )}
                       </div>
 
-                      {/* Price on right */}
+                      {/* Price */}
                       <div className="shrink-0 text-right">
                         <p className={`text-3xl font-bold leading-none ${getPriceColor(price!.price)}`}>
                           {price!.price}
