@@ -35,6 +35,12 @@ const FUEL_TYPES = [
 
 type SortMode = 'price' | 'distance'
 
+const MEMBERS_ONLY_KEYWORDS = ['costco', 'members only', 'members-only']
+
+function isMembersOnly(name: string) {
+  return MEMBERS_ONLY_KEYWORDS.some(k => name.toLowerCase().includes(k))
+}
+
 function App() {
   const [search, setSearch] = useState('')
   const [fuelType, setFuelType] = useState('E10')
@@ -46,6 +52,7 @@ function App() {
   const [lastSearchCoords, setLastSearchCoords] = useState<{lat: number, lng: number} | null>(null)
   const [searchLabel, setSearchLabel] = useState<string | null>(null)
   const [activeFuel, setActiveFuel] = useState('E10')
+  const [confirmStation, setConfirmStation] = useState<Station | null>(null)
 
   const RADIUS = 3
 
@@ -119,6 +126,12 @@ function App() {
     }
   }
 
+  function openGoogleMaps(station: Station) {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(station.address)}`
+    window.open(url, '_blank')
+    setConfirmStation(null)
+  }
+
   const getPrice = (stationCode: number) => {
     return data?.prices.find(p => p.stationcode === stationCode && p.fueltype === activeFuel)
   }
@@ -153,6 +166,43 @@ function App() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#0f1535', color: 'white' }}>
+
+      {/* Google Maps Confirmation Modal */}
+      {confirmStation && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+        >
+          <div
+            className="w-full max-w-sm p-6"
+            style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            <p className="text-white font-bold text-base mb-1">Open in Google Maps?</p>
+            <p className="text-sm mb-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              {confirmStation.name}
+            </p>
+            <p className="text-xs mb-5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              {confirmStation.address}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmStation(null)}
+                className="flex-1 py-2 text-sm font-medium"
+                style={{ border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => openGoogleMaps(confirmStation)}
+                className="flex-1 py-2 text-sm font-semibold text-white"
+                style={{ backgroundColor: '#4c6ef5' }}
+              >
+                Open Google Maps
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Row 1: Nav */}
       <div
@@ -302,19 +352,56 @@ function App() {
               <div className="space-y-1">
                 {getSortedStations().map(({ station, price }, index) => {
                   const saving = avgPrice ? (avgPrice - price!.price).toFixed(1) : null
+                  const membersOnly = isMembersOnly(station.name)
 
                   return (
                     <div
                       key={station.code}
-                      className="flex items-center"
+                      onClick={() => setConfirmStation(station)}
+                      className="flex items-center cursor-pointer"
                       style={{
                         backgroundColor: '#1a2150',
                         borderLeft: index === 0 ? '3px solid #22c55e' : '3px solid transparent',
                         marginBottom: '2px',
                         padding: '12px 16px',
                       }}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#1e2a6a')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#1a2150')}
                     >
-                      <div className="shrink-0 mr-4 text-left w-20">
+                      {/* Rank number */}
+                      <div
+                        className="shrink-0 mr-4 text-center w-6"
+                        style={{ color: index === 0 ? '#22c55e' : 'rgba(255,255,255,0.3)' }}
+                      >
+                        <p className="text-sm font-bold">{index + 1}</p>
+                      </div>
+
+                      {/* Station info */}
+                      <div className="flex-1 min-w-0 mr-4">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {index === 0 && (
+                            <span className="text-xs font-semibold text-green-400">
+                              {sortMode === 'price' ? 'CHEAPEST' : 'CLOSEST'}
+                            </span>
+                          )}
+                          {membersOnly && (
+                            <span
+                              className="text-xs font-semibold px-1.5 py-0.5"
+                              style={{ backgroundColor: 'rgba(234,179,8,0.2)', color: '#facc15', border: '1px solid rgba(234,179,8,0.4)' }}
+                            >
+                              MEMBERS ONLY
+                            </span>
+                          )}
+                        </div>
+                        <h2 className="font-bold text-white text-sm leading-tight mt-0.5">{station.name}</h2>
+                        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>{station.address}</p>
+                        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                          📍 {station.location.distance.toFixed(1)} km away · tap for directions
+                        </p>
+                      </div>
+
+                      {/* Price on right */}
+                      <div className="shrink-0 text-right">
                         <p className={`text-3xl font-bold leading-none ${getPriceColor(price!.price)}`}>
                           {price!.price}
                         </p>
@@ -322,17 +409,6 @@ function App() {
                         {saving && parseFloat(saving) > 0 && (
                           <p className="text-green-400 text-xs mt-1">Save {saving}¢</p>
                         )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        {index === 0 && (
-                          <p className="text-xs font-semibold mb-0.5 text-green-400">
-                            {sortMode === 'price' ? 'CHEAPEST' : 'CLOSEST'}
-                          </p>
-                        )}
-                        <h2 className="font-bold text-white text-sm leading-tight truncate">{station.name}</h2>
-                        <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.6)' }}>{station.address}</p>
-                        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>📍 {station.location.distance.toFixed(1)} km away</p>
                       </div>
                     </div>
                   )
