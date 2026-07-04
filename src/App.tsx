@@ -30,7 +30,14 @@ const FUEL_TYPES = [
   { value: 'P95', label: 'P95' },
   { value: 'P98', label: 'P98' },
   { value: 'DL', label: 'Diesel' },
+  { value: 'PDL', label: 'Premium Diesel' },
+  { value: 'E85', label: 'E85' },
+  { value: 'B20', label: 'B20' },
+  { value: 'EV', label: 'EV Charge' },
   { value: 'LPG', label: 'LPG' },
+  { value: 'LNG', label: 'LNG' },
+  { value: 'H2', label: 'Hydrogen' },
+  { value: 'CNG', label: 'CNG' },
 ]
 
 type SortMode = 'price' | 'distance'
