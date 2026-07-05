@@ -66,12 +66,10 @@ function App() {
 
   const RADIUS = 3
 
-  // Calculate litres needed to fill up
   const litresNeeded = tankSize && fuelLevel
     ? parseFloat(tankSize) * (1 - parseFloat(fuelLevel) / 100)
     : null
 
-  // Calculate fill cost for a given price
   function getFillCost(pricePerLitre: number): string | null {
     if (!litresNeeded) return null
     const cost = (pricePerLitre / 100) * litresNeeded
@@ -175,10 +173,10 @@ function App() {
     : null
 
   const getPriceColor = (price: number) => {
-    if (!avgPrice) return '#111827'
-    if (price <= avgPrice - 3) return '#16a34a'
-    if (price >= avgPrice + 3) return '#dc2626'
-    return '#ea580c'
+    if (!avgPrice) return '#ffffff'
+    if (price <= avgPrice - 3) return '#4ade80'
+    if (price >= avgPrice + 3) return '#f87171'
+    return '#fb923c'
   }
 
   const getSortedStations = () => {
@@ -194,33 +192,32 @@ function App() {
     }
   }
 
-  // Get cheapest fill cost for savings comparison
   const sortedStations = getSortedStations()
   const cheapestPrice = sortedStations.length > 0 ? sortedStations[0].price?.price : null
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f8f9fa', color: '#111827' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#f8f9fa' }}>
 
       {/* Google Maps Confirmation Modal */}
       {confirmStation && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
           onClick={() => setConfirmStation(null)}
         >
           <div
             className="w-full max-w-sm p-6"
-            style={{ backgroundColor: 'white', border: '1px solid #e5e7eb', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}
+            style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}
             onClick={e => e.stopPropagation()}
           >
-            <p className="font-bold text-base mb-1" style={{ color: '#111827' }}>Open in Google Maps?</p>
-            <p className="text-sm mb-1" style={{ color: '#6b7280' }}>{confirmStation.name}</p>
-            <p className="text-xs mb-5" style={{ color: '#9ca3af' }}>{confirmStation.address}</p>
+            <p className="font-bold text-base mb-1 text-white">Open in Google Maps?</p>
+            <p className="text-sm mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>{confirmStation.name}</p>
+            <p className="text-xs mb-5" style={{ color: 'rgba(255,255,255,0.4)' }}>{confirmStation.address}</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmStation(null)}
                 className="flex-1 py-2 text-sm font-medium"
-                style={{ border: '1px solid #d1d5db', color: '#374151' }}
+                style={{ border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' }}
               >
                 Cancel
               </button>
@@ -253,7 +250,7 @@ function App() {
           title="Use my location"
         >
           {locationLoading ? (
-            <span className="text-xs">...</span>
+            <span className="text-xs text-white">...</span>
           ) : (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3"/>
@@ -263,9 +260,10 @@ function App() {
           )}
         </button>
 
+        {/* Search bar — navy */}
         <div
           className="flex-1 flex items-center gap-2 px-3 h-10"
-          style={{ backgroundColor: '#f3f4f6', border: '1px solid #e5e7eb' }}
+          style={{ backgroundColor: '#0a0f2c', border: '1px solid #1a2150' }}
         >
           <input
             type="text"
@@ -274,7 +272,7 @@ function App() {
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
             placeholder="Suburb or postcode"
             className="flex-1 bg-transparent text-sm focus:outline-none min-w-0"
-            style={{ color: '#111827' }}
+            style={{ color: 'white' }}
           />
           <button
             onClick={handleSearch}
@@ -287,9 +285,9 @@ function App() {
         </div>
       </div>
 
-      {/* Row 2: Fuel type */}
+      {/* Row 2: Fuel type — navy background */}
       <div
-        style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb' }}
+        style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid #1a2150' }}
         className="px-4 py-2 flex items-center gap-2 overflow-x-auto"
       >
         {FUEL_TYPES.map(f => (
@@ -299,8 +297,8 @@ function App() {
             className="text-sm px-3 py-1 font-medium shrink-0"
             style={{
               backgroundColor: fuelType === f.value ? '#4c6ef5' : 'transparent',
-              color: fuelType === f.value ? 'white' : '#374151',
-              border: fuelType === f.value ? '1px solid #4c6ef5' : '1px solid #d1d5db',
+              color: fuelType === f.value ? 'white' : 'rgba(255,255,255,0.85)',
+              border: fuelType === f.value ? '1px solid #4c6ef5' : '1px solid rgba(255,255,255,0.2)',
             }}
           >
             {f.label}
@@ -342,28 +340,28 @@ function App() {
             </p>
           )}
 
-          {/* Fill Cost Calculator */}
+          {/* Fill Cost Calculator — navy */}
           <div
             className="mb-4 p-4"
-            style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
+            style={{ backgroundColor: '#0a0f2c', border: '1px solid #1a2150' }}
           >
-            <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: '#6b7280' }}>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>
               Fill Cost Calculator
             </p>
             <div className="flex gap-3 items-end">
               <div className="flex-1">
-                <label className="text-xs mb-1 block" style={{ color: '#6b7280' }}>Tank size (litres)</label>
+                <label className="text-xs mb-1 block" style={{ color: 'rgba(255,255,255,0.6)' }}>Tank size (litres)</label>
                 <input
                   type="number"
                   value={tankSize}
                   onChange={e => setTankSize(e.target.value)}
                   placeholder="e.g. 50"
                   className="w-full px-3 py-2 text-sm focus:outline-none"
-                  style={{ border: '1px solid #d1d5db', backgroundColor: '#f9fafb', color: '#111827' }}
+                  style={{ border: '1px solid rgba(255,255,255,0.15)', backgroundColor: '#1a2150', color: 'white' }}
                 />
               </div>
               <div className="flex-1">
-                <label className="text-xs mb-1 block" style={{ color: '#6b7280' }}>Current level (%)</label>
+                <label className="text-xs mb-1 block" style={{ color: 'rgba(255,255,255,0.6)' }}>Current level (%)</label>
                 <input
                   type="number"
                   value={fuelLevel}
@@ -372,23 +370,23 @@ function App() {
                   min="0"
                   max="100"
                   className="w-full px-3 py-2 text-sm focus:outline-none"
-                  style={{ border: '1px solid #d1d5db', backgroundColor: '#f9fafb', color: '#111827' }}
+                  style={{ border: '1px solid rgba(255,255,255,0.15)', backgroundColor: '#1a2150', color: 'white' }}
                 />
               </div>
             </div>
             {litresNeeded && (
-              <p className="text-xs mt-2" style={{ color: '#6b7280' }}>
-                You need <span className="font-semibold" style={{ color: '#111827' }}>{litresNeeded.toFixed(1)}L</span> to fill up
+              <p className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                You need <span className="font-semibold text-white">{litresNeeded.toFixed(1)}L</span> to fill up
               </p>
             )}
           </div>
 
           {data.stations.length === 0 && (
-            <div className="px-4 py-8 text-center" style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb' }}>
-              <p className="text-sm" style={{ color: '#6b7280' }}>
+            <div className="px-4 py-8 text-center" style={{ backgroundColor: '#0a0f2c', border: '1px solid #1a2150' }}>
+              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
                 No stations found within {RADIUS}km of {searchLabel || 'this location'}.
               </p>
-              <p className="text-xs mt-2" style={{ color: '#9ca3af' }}>Try searching a nearby suburb.</p>
+              <p className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.4)' }}>Try searching a nearby suburb.</p>
             </div>
           )}
 
@@ -432,7 +430,7 @@ function App() {
                   const membersOnly = isMembersOnly(station.name)
                   const isExpanded = expandedStation === index
                   const fillCost = getFillCost(price!.price)
-                  const cheapestFillCost = cheapestPrice ? (cheapestPrice / 100) * (litresNeeded || 0) : null
+                  const cheapestFillCost = cheapestPrice && litresNeeded ? (cheapestPrice / 100) * litresNeeded : null
                   const thisFillCost = litresNeeded ? (price!.price / 100) * litresNeeded : null
                   const fillSaving = cheapestFillCost && thisFillCost && index > 0
                     ? (thisFillCost - cheapestFillCost).toFixed(2)
@@ -444,23 +442,19 @@ function App() {
                       onClick={() => handleCardClick(station, index)}
                       className="flex items-center cursor-pointer"
                       style={{
-                        backgroundColor: isExpanded ? '#f0f4ff' : '#ffffff',
-                        borderLeft: index === 0 ? '3px solid #16a34a' : '1px solid #e5e7eb',
-                        borderTop: '1px solid #e5e7eb',
-                        borderRight: '1px solid #e5e7eb',
-                        borderBottom: '1px solid #e5e7eb',
+                        backgroundColor: isExpanded ? '#1e2a6a' : '#1a2150',
+                        borderLeft: index === 0 ? '3px solid #4ade80' : '3px solid transparent',
                         marginBottom: '4px',
                         padding: '12px 16px',
                         transition: 'background-color 0.15s',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
                       }}
-                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f0f4ff')}
-                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = isExpanded ? '#f0f4ff' : '#ffffff')}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#1e2a6a')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = isExpanded ? '#1e2a6a' : '#1a2150')}
                     >
                       {/* Rank */}
                       <div
                         className="shrink-0 mr-4 text-center w-5"
-                        style={{ color: index === 0 ? '#16a34a' : '#9ca3af' }}
+                        style={{ color: index === 0 ? '#4ade80' : 'rgba(255,255,255,0.3)' }}
                       >
                         <p className="text-sm font-bold">{index + 1}</p>
                       </div>
@@ -469,27 +463,25 @@ function App() {
                       <div className="flex-1 min-w-0 mr-4">
                         <div className="flex items-center gap-2 flex-wrap mb-0.5">
                           {index === 0 && (
-                            <span className="text-xs font-semibold" style={{ color: '#16a34a' }}>
+                            <span className="text-xs font-semibold" style={{ color: '#4ade80' }}>
                               {sortMode === 'price' ? 'CHEAPEST' : 'CLOSEST'}
                             </span>
                           )}
                           {membersOnly && (
                             <span
                               className="text-xs font-semibold px-1.5 py-0.5"
-                              style={{ backgroundColor: '#fef9c3', color: '#854d0e', border: '1px solid #fde047' }}
+                              style={{ backgroundColor: 'rgba(234,179,8,0.2)', color: '#facc15', border: '1px solid rgba(234,179,8,0.4)' }}
                             >
                               MEMBERS ONLY
                             </span>
                           )}
                         </div>
-                        <h2 className="font-bold text-sm leading-tight" style={{ color: '#111827' }}>
-                          {station.name}
-                        </h2>
-                        <p className="text-xs mt-0.5" style={{ color: '#9ca3af' }}>
+                        <h2 className="font-bold text-sm leading-tight text-white">{station.name}</h2>
+                        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
                           {station.location.distance.toFixed(1)} km away
                         </p>
                         {isExpanded && (
-                          <p className="text-xs mt-1" style={{ color: '#6b7280' }}>
+                          <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
                             {station.address}
                             <span className="ml-2" style={{ color: '#4c6ef5' }}>Tap again for directions →</span>
                           </p>
@@ -501,19 +493,15 @@ function App() {
                         <p className="text-3xl font-bold leading-none" style={{ color: getPriceColor(price!.price) }}>
                           {price!.price}
                         </p>
-                        <p className="text-xs mt-1" style={{ color: '#6b7280' }}>¢/litre</p>
+                        <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>¢/litre</p>
                         {fillCost && (
-                          <p className="text-sm font-semibold mt-1" style={{ color: '#111827' }}>
-                            {fillCost}
-                          </p>
+                          <p className="text-sm font-semibold mt-1 text-white">{fillCost}</p>
                         )}
                         {fillSaving && parseFloat(fillSaving) > 0 && (
-                          <p className="text-xs mt-0.5" style={{ color: '#dc2626' }}>
-                            +${fillSaving} vs cheapest
-                          </p>
+                          <p className="text-xs mt-0.5" style={{ color: '#f87171' }}>+${fillSaving} vs cheapest</p>
                         )}
                         {!fillCost && saving && parseFloat(saving) > 0 && (
-                          <p className="text-xs mt-1" style={{ color: '#16a34a' }}>Save {saving}¢</p>
+                          <p className="text-xs mt-1" style={{ color: '#4ade80' }}>Save {saving}¢</p>
                         )}
                       </div>
                     </div>
