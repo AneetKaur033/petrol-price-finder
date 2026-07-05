@@ -328,7 +328,6 @@ function App() {
       {/* Empty state */}
       {!data && !loading && !error && (
         <div className="text-center py-24 px-4" style={{ color: '#9ca3af' }}>
-          <p className="text-4xl mb-3">⛽</p>
           <p className="text-sm">Use your location or search a suburb to find cheap fuel nearby</p>
         </div>
       )}
