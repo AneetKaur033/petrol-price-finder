@@ -196,22 +196,22 @@ function App() {
   const cheapestPrice = sortedStations.length > 0 ? sortedStations[0].price?.price : null
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f8f9fa' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#0f1535', color: 'white' }}>
 
       {/* Google Maps Confirmation Modal */}
       {confirmStation && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+          style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
           onClick={() => setConfirmStation(null)}
         >
           <div
             className="w-full max-w-sm p-6"
-            style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}
+            style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)' }}
             onClick={e => e.stopPropagation()}
           >
             <p className="font-bold text-base mb-1 text-white">Open in Google Maps?</p>
-            <p className="text-sm mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>{confirmStation.name}</p>
+            <p className="text-sm mb-1" style={{ color: 'rgba(255,255,255,0.6)' }}>{confirmStation.name}</p>
             <p className="text-xs mb-5" style={{ color: 'rgba(255,255,255,0.4)' }}>{confirmStation.address}</p>
             <div className="flex gap-3">
               <button
@@ -235,10 +235,10 @@ function App() {
 
       {/* Row 1: Nav */}
       <div
-        style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
+        style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
         className="px-4 py-3 flex items-center gap-3"
       >
-        <h1 className="text-lg font-bold shrink-0" style={{ color: '#111827' }}>
+        <h1 className="text-lg font-bold shrink-0">
           fuel<span style={{ color: '#4c6ef5' }}>finder</span>
         </h1>
 
@@ -250,7 +250,7 @@ function App() {
           title="Use my location"
         >
           {locationLoading ? (
-            <span className="text-xs text-white">...</span>
+            <span className="text-xs">...</span>
           ) : (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3"/>
@@ -260,10 +260,9 @@ function App() {
           )}
         </button>
 
-        {/* Search bar — navy */}
         <div
           className="flex-1 flex items-center gap-2 px-3 h-10"
-          style={{ backgroundColor: '#0a0f2c', border: '1px solid #1a2150' }}
+          style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.1)' }}
         >
           <input
             type="text"
@@ -271,8 +270,7 @@ function App() {
             onChange={e => setSearch(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
             placeholder="Suburb or postcode"
-            className="flex-1 bg-transparent text-sm focus:outline-none min-w-0"
-            style={{ color: 'white' }}
+            className="flex-1 bg-transparent text-sm text-white placeholder-white/60 focus:outline-none min-w-0"
           />
           <button
             onClick={handleSearch}
@@ -285,9 +283,9 @@ function App() {
         </div>
       </div>
 
-      {/* Row 2: Fuel type — navy background */}
+      {/* Row 2: Fuel type */}
       <div
-        style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid #1a2150' }}
+        style={{ backgroundColor: '#0a0f2c', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
         className="px-4 py-2 flex items-center gap-2 overflow-x-auto"
       >
         {FUEL_TYPES.map(f => (
@@ -309,8 +307,8 @@ function App() {
       {/* Error */}
       {error && (
         <div
-          className="mx-4 mt-4 px-4 py-3 text-sm"
-          style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626' }}
+          className="mx-4 mt-4 px-4 py-3 text-sm text-red-300"
+          style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}
         >
           {error}
         </div>
@@ -318,14 +316,13 @@ function App() {
 
       {/* Loading */}
       {loading && (
-        <div className="text-center py-16 text-sm" style={{ color: '#6b7280' }}>
-          Finding cheapest prices...
-        </div>
+        <div className="text-center py-16 text-white/60 text-sm">Finding cheapest prices...</div>
       )}
 
       {/* Empty state */}
       {!data && !loading && !error && (
-        <div className="text-center py-24 px-4" style={{ color: '#9ca3af' }}>
+        <div className="text-center py-24 px-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          <p className="text-4xl mb-3">⛽</p>
           <p className="text-sm">Use your location or search a suburb to find cheap fuel nearby</p>
         </div>
       )}
@@ -335,15 +332,15 @@ function App() {
         <div className="px-4 mt-5 pb-10">
 
           {searchLabel && (
-            <p className="text-xs mb-3" style={{ color: '#6b7280' }}>
-              Showing results near <span className="font-semibold" style={{ color: '#111827' }}>{searchLabel}</span> within {RADIUS}km
+            <p className="text-xs mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              Showing results near <span className="font-semibold text-white">{searchLabel}</span> within {RADIUS}km
             </p>
           )}
 
-          {/* Fill Cost Calculator — navy */}
+          {/* Fill Cost Calculator */}
           <div
             className="mb-4 p-4"
-            style={{ backgroundColor: '#0a0f2c', border: '1px solid #1a2150' }}
+            style={{ backgroundColor: '#1a2150', border: '1px solid rgba(255,255,255,0.08)' }}
           >
             <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>
               Fill Cost Calculator
@@ -356,8 +353,8 @@ function App() {
                   value={tankSize}
                   onChange={e => setTankSize(e.target.value)}
                   placeholder="e.g. 50"
-                  className="w-full px-3 py-2 text-sm focus:outline-none"
-                  style={{ border: '1px solid rgba(255,255,255,0.15)', backgroundColor: '#1a2150', color: 'white' }}
+                  className="w-full px-3 py-2 text-sm focus:outline-none text-white"
+                  style={{ border: '1px solid rgba(255,255,255,0.15)', backgroundColor: '#0f1535' }}
                 />
               </div>
               <div className="flex-1">
@@ -369,8 +366,8 @@ function App() {
                   placeholder="e.g. 25"
                   min="0"
                   max="100"
-                  className="w-full px-3 py-2 text-sm focus:outline-none"
-                  style={{ border: '1px solid rgba(255,255,255,0.15)', backgroundColor: '#1a2150', color: 'white' }}
+                  className="w-full px-3 py-2 text-sm focus:outline-none text-white"
+                  style={{ border: '1px solid rgba(255,255,255,0.15)', backgroundColor: '#0f1535' }}
                 />
               </div>
             </div>
@@ -382,7 +379,7 @@ function App() {
           </div>
 
           {data.stations.length === 0 && (
-            <div className="px-4 py-8 text-center" style={{ backgroundColor: '#0a0f2c', border: '1px solid #1a2150' }}>
+            <div className="px-4 py-8 text-center" style={{ backgroundColor: '#1a2150' }}>
               <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
                 No stations found within {RADIUS}km of {searchLabel || 'this location'}.
               </p>
@@ -394,14 +391,14 @@ function App() {
             <>
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs uppercase tracking-wider" style={{ color: '#6b7280' }}>Sort by</span>
-                  <div className="flex" style={{ border: '1px solid #d1d5db' }}>
+                  <span className="text-xs uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.7)' }}>Sort by</span>
+                  <div className="flex" style={{ border: '1px solid rgba(255,255,255,0.2)' }}>
                     <button
                       onClick={() => setSortMode('price')}
                       className="px-3 py-1.5 text-sm font-medium"
                       style={{
                         backgroundColor: sortMode === 'price' ? '#4c6ef5' : 'transparent',
-                        color: sortMode === 'price' ? 'white' : '#374151',
+                        color: sortMode === 'price' ? 'white' : 'rgba(255,255,255,0.85)',
                       }}
                     >
                       Price
@@ -411,15 +408,15 @@ function App() {
                       className="px-3 py-1.5 text-sm font-medium"
                       style={{
                         backgroundColor: sortMode === 'distance' ? '#4c6ef5' : 'transparent',
-                        color: sortMode === 'distance' ? 'white' : '#374151',
-                        borderLeft: '1px solid #d1d5db',
+                        color: sortMode === 'distance' ? 'white' : 'rgba(255,255,255,0.85)',
+                        borderLeft: '1px solid rgba(255,255,255,0.2)',
                       }}
                     >
                       Distance
                     </button>
                   </div>
                 </div>
-                <p className="text-xs" style={{ color: '#6b7280' }}>
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
                   {data.stations.length} stations · avg {avgPrice?.toFixed(1)}¢/L
                 </p>
               </div>
@@ -444,7 +441,7 @@ function App() {
                       style={{
                         backgroundColor: isExpanded ? '#1e2a6a' : '#1a2150',
                         borderLeft: index === 0 ? '3px solid #4ade80' : '3px solid transparent',
-                        marginBottom: '4px',
+                        marginBottom: '2px',
                         padding: '12px 16px',
                         transition: 'background-color 0.15s',
                       }}
