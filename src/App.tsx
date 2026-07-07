@@ -351,8 +351,12 @@ function App() {
                 <input
                   type="number"
                   value={tankSize}
-                  onChange={e => setTankSize(e.target.value)}
+                  onChange={e => {
+                    const val = parseFloat(e.target.value)
+                    if (e.target.value === '' || val > 0) setTankSize(e.target.value)
+                  }}
                   placeholder="e.g. 50"
+                  min="1"
                   className="w-full px-3 py-2 text-sm focus:outline-none text-white"
                   style={{ border: '1px solid rgba(255,255,255,0.15)', backgroundColor: '#0f1535' }}
                 />
@@ -362,7 +366,10 @@ function App() {
                 <input
                   type="number"
                   value={fuelLevel}
-                  onChange={e => setFuelLevel(e.target.value)}
+                  onChange={e => {
+                    const val = parseFloat(e.target.value)
+                    if (e.target.value === '' || (val >= 0 && val <= 100)) setFuelLevel(e.target.value)
+                  }}
                   placeholder="e.g. 25"
                   min="0"
                   max="100"
