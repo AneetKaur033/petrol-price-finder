@@ -491,8 +491,11 @@ function App() {
                           {price!.price}
                         </p>
                         <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>¢/litre</p>
-                        {fillCost && (
-                          <p className="text-sm font-semibold mt-1 text-white">{fillCost}</p>
+                       {fillCost && (
+                          <div className="mt-1">
+                            <p className="text-sm font-bold" style={{ color: '#4ade80' }}>{fillCost}</p>
+                            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>to fill up</p>
+                          </div>
                         )}
                         {fillSaving && parseFloat(fillSaving) > 0 && (
                           <p className="text-xs mt-0.5" style={{ color: '#f87171' }}>+${fillSaving} vs cheapest</p>
