@@ -204,7 +204,7 @@ function App() {
       <div className="min-h-screen" style={{ backgroundColor: '#f0f4ff' }}>
 
         {/* Nav */}
-        <div className="px-8 py-5 flex items-center justify-between" style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e7eb' }}>
+        <div className="px-8 py-5 flex items-center" style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e7eb' }}>
           <h1 className="text-xl font-bold" style={{ color: '#0f1535' }}>
             fuel<span style={{ color: '#4c6ef5' }}>finder</span>
             <span className="text-xs font-normal ml-2 px-2 py-0.5" style={{ backgroundColor: '#e8edff', color: '#4c6ef5' }}>NSW</span>
@@ -214,31 +214,17 @@ function App() {
         {/* Hero */}
         <div className="max-w-6xl mx-auto px-8 py-16 flex flex-col md:flex-row items-center gap-12">
 
-          {/* Left: Headline */}
+          {/* Left */}
           <div className="flex-1">
-            <p className="text-sm font-semibold uppercase tracking-widest mb-4" style={{ color: '#4c6ef5' }}>
+            <p className="text-sm font-semibold uppercase tracking-widest mb-6" style={{ color: '#4c6ef5' }}>
               Live NSW Fuel Prices
             </p>
-            <h2 className="text-5xl font-bold leading-tight mb-6" style={{ color: '#0f1535' }}>
+            <h2 className="font-bold leading-tight mb-6" style={{ color: '#0f1535', fontSize: '64px', lineHeight: '1.1' }}>
               Stop overpaying<br />at the pump.
             </h2>
-            <p className="text-lg mb-8" style={{ color: '#6b7280' }}>
+            <p className="text-xl mb-8" style={{ color: '#6b7280', maxWidth: '480px' }}>
               Real-time petrol prices from every station in NSW. Find the cheapest fuel near you before you leave — not after you've already pulled in.
             </p>
-            <div className="flex gap-4 flex-wrap">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#16a34a' }}></div>
-                <span className="text-sm" style={{ color: '#6b7280' }}>Live prices</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#4c6ef5' }}></div>
-                <span className="text-sm" style={{ color: '#6b7280' }}>2,500+ stations</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#ea580c' }}></div>
-                <span className="text-sm" style={{ color: '#6b7280' }}>No account needed</span>
-              </div>
-            </div>
           </div>
 
           {/* Right: Search panel */}
@@ -252,7 +238,6 @@ function App() {
               </div>
             )}
 
-            {/* Location button */}
             <button
               onClick={handleUseLocation}
               disabled={locationLoading}
@@ -273,7 +258,6 @@ function App() {
               <div className="flex-1 h-px" style={{ backgroundColor: '#e5e7eb' }}></div>
             </div>
 
-            {/* Search input */}
             <input
               type="text"
               value={search}
@@ -284,7 +268,6 @@ function App() {
               style={{ border: '1px solid #d1d5db', color: '#0f1535', backgroundColor: '#f9fafb' }}
             />
 
-            {/* Fuel type */}
             <select
               value={fuelType}
               onChange={e => setFuelType(e.target.value)}
@@ -296,12 +279,11 @@ function App() {
               ))}
             </select>
 
-            {/* Search button */}
             <button
               onClick={handleSearch}
               disabled={loading}
               className="w-full py-3 text-sm font-semibold text-white"
-              style={{ backgroundColor: '#4c6ef5' }}
+              style={{ backgroundColor: '#0f1535' }}
             >
               {loading ? 'Searching...' : 'Find cheapest fuel →'}
             </button>
@@ -341,7 +323,7 @@ function App() {
               <button
                 onClick={() => openGoogleMaps(confirmStation)}
                 className="flex-1 py-2 text-sm font-semibold text-white"
-                style={{ backgroundColor: '#4c6ef5' }}
+                style={{ backgroundColor: '#0f1535' }}
               >
                 Open Google Maps
               </button>
@@ -357,17 +339,16 @@ function App() {
       >
         <button
           onClick={() => setPage('landing')}
-          className="text-sm flex items-center gap-1.5 px-3 py-1.5"
+          className="text-sm flex items-center gap-1.5 px-3 py-1.5 shrink-0"
           style={{ color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.2)' }}
         >
           ← Back
         </button>
 
-        <h1 className="text-base font-bold">
+        <h1 className="text-base font-bold shrink-0">
           fuel<span style={{ color: '#4c6ef5' }}>finder</span>
         </h1>
 
-        {/* Fuel type pills */}
         <div className="flex items-center gap-2 overflow-x-auto ml-2">
           {FUEL_TYPES.map(f => (
             <button
