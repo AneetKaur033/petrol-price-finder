@@ -199,18 +199,21 @@ function App() {
   const cheapestPrice = sortedStations.length > 0 ? sortedStations[0].price?.price : null
 
   // ─── LANDING PAGE ───────────────────────────────────────────────
-  if (page === 'landing') {
+if (page === 'landing') {
     return (
       <div className="min-h-screen" style={{
         background: 'linear-gradient(135deg, #dbeafe 0%, #e0f2fe 40%, #ccfbf1 100%)',
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
       }}>
 
-        {/* Nav */}
-            <div className="px-8 py-5 flex items-center" style={{ backgroundColor: 'transparent' }}>          <h1 className="text-xl font-bold" style={{ color: '#0f1535' }}>
-            fuel<span style={{ color: '#4c6ef5' }}>finder</span>
-            <span className="text-xs font-normal ml-2 px-2 py-0.5" style={{ backgroundColor: '#dbeafe', color: '#1d4ed8', borderRadius: '4px' }}>NSW</span>
-          </h1>
+        {/* Nav — logo in white pill only */}
+        <div className="px-8 py-5 flex items-center" style={{ backgroundColor: 'transparent' }}>
+          <div className="px-4 py-2" style={{ backgroundColor: 'white', borderRadius: '50px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+            <h1 className="text-base font-bold" style={{ color: '#0f1535' }}>
+              fuel<span style={{ color: '#4c6ef5' }}>finder</span>
+              <span className="text-xs font-normal ml-2 px-2 py-0.5" style={{ backgroundColor: '#dbeafe', color: '#1d4ed8', borderRadius: '4px' }}>NSW</span>
+            </h1>
+          </div>
         </div>
 
         {/* Hero */}
@@ -224,24 +227,21 @@ function App() {
             <p className="text-lg font-light mb-2" style={{ color: '#475569', maxWidth: '440px', lineHeight: '1.7' }}>
               Real-time petrol prices from every station in NSW.
             </p>
-            <p className="text-lg font-light" style={{ color: '#475569', maxWidth: '440px', lineHeight: '1.7' }}>
+            <p className="text-lg font-light mb-8" style={{ color: '#475569', maxWidth: '440px', lineHeight: '1.7' }}>
               Know the cheapest price before you leave — not after you've already pulled in.
             </p>
             <button
-              onClick={() => document.getElementById('search-panel')?.scrollIntoView({ behavior: 'smooth' })}
-              className="mt-8 px-8 py-4 text-white font-semibold text-base"
+              onClick={() => document.getElementById('full-search')?.scrollIntoView({ behavior: 'smooth' })}
+              className="px-8 py-4 text-white font-semibold text-base"
               style={{ backgroundColor: '#1d4ed8', borderRadius: '50px' }}
             >
-              Find cheapest fuel
+              Find cheapest fuel →
             </button>
           </div>
 
-          {/* Right: Search panel */}
-
-          {/* Right: Search panel */}
-              <div id="search-panel" className="w-full md:w-96 p-8 shadow-2xl" style={{ backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.8)' }}>            <div className="flex justify-between items-start mb-1">
-              <p className="font-semibold text-base" style={{ color: '#0f172a' }}>Search live prices</p>
-            </div>
+          {/* Right: compact search panel */}
+          <div className="w-full md:w-96 p-8 shadow-2xl" style={{ backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.8)' }}>
+            <p className="font-semibold text-base mb-1" style={{ color: '#0f172a' }}>Search live prices</p>
             <p className="text-sm mb-6" style={{ color: '#94a3b8' }}>No account, no saved location.</p>
 
             {error && (
@@ -250,7 +250,6 @@ function App() {
               </div>
             )}
 
-            {/* Search input with GPS button */}
             <label className="text-xs font-medium mb-1 block" style={{ color: '#64748b' }}>Postcode or suburb</label>
             <div className="flex gap-2 mb-4">
               <input
@@ -259,7 +258,7 @@ function App() {
                 onChange={e => setSearch(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
                 placeholder="e.g. Bondi or 2026"
-                className="flex-1 px-4 py-3 text-sm focus:outline-none focus:ring-2"
+                className="flex-1 px-4 py-3 text-sm focus:outline-none"
                 style={{ border: '1px solid #e2e8f0', color: '#0f172a', backgroundColor: 'white', borderRadius: '8px' }}
               />
               <button
@@ -281,12 +280,11 @@ function App() {
               </button>
             </div>
 
-            {/* Fuel type */}
             <label className="text-xs font-medium mb-1 block" style={{ color: '#64748b' }}>Fuel type</label>
             <select
               value={fuelType}
               onChange={e => setFuelType(e.target.value)}
-              className="w-full px-4 py-3 text-sm mb-6 focus:outline-none"
+              className="w-full px-4 py-3 text-sm mb-4 focus:outline-none"
               style={{ border: '1px solid #e2e8f0', color: '#0f172a', backgroundColor: 'white', borderRadius: '8px' }}
             >
               {FUEL_TYPES.map(f => (
@@ -294,17 +292,73 @@ function App() {
               ))}
             </select>
 
-            {/* Search button */}
             <button
               onClick={handleSearch}
               disabled={loading}
               className="w-full py-4 text-sm font-semibold text-white"
-              style={{ backgroundColor: '#1d4ed8', borderRadius: '8px', fontSize: '15px' }}
+              style={{ backgroundColor: '#1d4ed8', borderRadius: '8px' }}
             >
               {loading ? 'Searching...' : 'Find cheapest fuel'}
             </button>
           </div>
         </div>
+
+        {/* Full width search section */}
+        <div id="full-search" className="px-8 py-16" style={{ backgroundColor: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(10px)' }}>
+          <div className="max-w-xl mx-auto">
+            <p className="text-2xl font-bold mb-2 text-center" style={{ color: '#0f172a' }}>Find cheap fuel near you</p>
+            <p className="text-sm text-center mb-8" style={{ color: '#64748b' }}>Enter your suburb or postcode below</p>
+
+            <div className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                placeholder="Suburb or postcode e.g. Bondi, 2026"
+                className="flex-1 px-5 py-4 text-base focus:outline-none"
+                style={{ border: '1px solid #e2e8f0', color: '#0f172a', backgroundColor: 'white', borderRadius: '8px' }}
+              />
+              <button
+                onClick={handleUseLocation}
+                disabled={locationLoading}
+                className="flex items-center justify-center w-14 h-14 shrink-0"
+                style={{ backgroundColor: '#0f1535', borderRadius: '8px', color: 'white' }}
+              >
+                {locationLoading ? (
+                  <span className="text-xs text-white">...</span>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v4M12 19v4M1 12h4M19 12h4"/>
+                    <circle cx="12" cy="12" r="7"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+
+            <select
+              value={fuelType}
+              onChange={e => setFuelType(e.target.value)}
+              className="w-full px-5 py-4 text-base mb-4 focus:outline-none"
+              style={{ border: '1px solid #e2e8f0', color: '#0f172a', backgroundColor: 'white', borderRadius: '8px' }}
+            >
+              {FUEL_TYPES.map(f => (
+                <option key={f.value} value={f.value}>{f.label}</option>
+              ))}
+            </select>
+
+            <button
+              onClick={handleSearch}
+              disabled={loading}
+              className="w-full py-4 text-base font-semibold text-white"
+              style={{ backgroundColor: '#1d4ed8', borderRadius: '8px' }}
+            >
+              {loading ? 'Searching...' : 'Find cheapest fuel →'}
+            </button>
+          </div>
+        </div>
+
       </div>
     )
   }
