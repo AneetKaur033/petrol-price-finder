@@ -96,11 +96,20 @@ function App() {
     }
   }
 
-  async function handleSearch() {
-    if (!search.trim()) return
+ async function handleSearch() {
     setLoading(true)
     setError(null)
     try {
+      // If we already have coords from GPS, use them directly
+      if (lastSearchCoords && search === searchLabel) {
+        await fetchByCoords(lastSearchCoords.lat, lastSearchCoords.lng, fuelType)
+        return
+      }
+      if (!search.trim()) {
+        setError('Please enter a suburb or use your location.')
+        setLoading(false)
+        return
+      }
       const geoRes = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(search + ', NSW, Australia')}&format=json&limit=1&addressdetails=1`
       )
@@ -116,8 +125,8 @@ function App() {
       setLoading(false)
     }
   }
-
-  async function handleUseLocation() {
+  
+ async function handleUseLocation() {
     setLocationLoading(true)
     setError(null)
     navigator.geolocation.getCurrentPosition(
@@ -129,10 +138,12 @@ function App() {
           const data = await res.json()
           const suburb = data?.address?.suburb || data?.address?.town || 'your location'
           setSearchLabel(suburb)
+          setSearch(suburb)
         } catch {
           setSearchLabel('your location')
+          setSearch('your location')
         }
-        await fetchByCoords(pos.coords.latitude, pos.coords.longitude, fuelType)
+        setLastSearchCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude })
         setLocationLoading(false)
       },
       () => {
