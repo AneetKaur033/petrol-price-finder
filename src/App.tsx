@@ -230,8 +230,14 @@ if (page === 'landing') {
             <p className="text-lg font-light mb-8" style={{ color: '#475569', maxWidth: '440px', lineHeight: '1.7' }}>
               Know the cheapest price before you leave — not after you've already pulled in.
             </p>
-            <button
-              onClick={() => document.getElementById('full-search')?.scrollIntoView({ behavior: 'smooth' })}
+           <button
+              onClick={() => {
+                const el = document.getElementById('full-search')
+                if (el) {
+                  const y = el.getBoundingClientRect().top + window.scrollY
+                  window.scrollTo({ top: y, behavior: 'smooth' })
+                }
+              }}
               className="px-8 py-4 text-white font-semibold text-base"
               style={{ backgroundColor: '#1d4ed8', borderRadius: '50px' }}
             >
@@ -304,8 +310,7 @@ if (page === 'landing') {
         </div>
 
         {/* Full width search section */}
-        <div id="full-search" className="px-8 py-16" style={{ backgroundColor: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(10px)' }}>
-          <div className="max-w-xl mx-auto">
+            <div id="full-search" className="px-8 py-16 min-h-screen flex items-center" style={{ backgroundColor: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(10px)' }}>          <div className="max-w-xl mx-auto">
             <p className="text-2xl font-bold mb-2 text-center" style={{ color: '#0f172a' }}>Find cheap fuel near you</p>
             <p className="text-sm text-center mb-8" style={{ color: '#64748b' }}>Enter your suburb or postcode below</p>
 
