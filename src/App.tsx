@@ -210,7 +210,7 @@ function App() {
       <div style={{ background: gradientBg, fontFamily }}>
 
         {/* Nav */}
-        <div className="px-8 py-5" style={{ backgroundColor: 'transparent' }}>
+        <div className="px-8 py-5 flex justify-center" style={{ backgroundColor: 'transparent' }}>
           <div className="inline-flex px-4 py-2" style={{ backgroundColor: 'white', borderRadius: '50px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
             <h1 className="text-base font-bold" style={{ color: '#0f1535' }}>
               fuel<span style={{ color: '#4c6ef5' }}>finder</span>
