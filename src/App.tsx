@@ -420,24 +420,27 @@ function App() {
         </div>
       )}
 
-      {/* Results Nav — same pill style as landing */}
-      <div className="px-8 py-5 flex items-center gap-4" style={{ backgroundColor: 'transparent' }}>
-        <div className="inline-flex items-center gap-3 px-4 py-2" style={{ backgroundColor: 'white', borderRadius: '50px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-          <button
-            onClick={() => setPage('landing')}
-            className="text-sm font-medium flex items-center gap-1"
-            style={{ color: '#374151' }}
-          >
-            ← Back
-          </button>
-          <div style={{ width: '1px', height: '16px', backgroundColor: '#e2e8f0' }} />
+      {/* Results Nav */}
+      <div className="px-6 py-4 flex items-center justify-between" style={{ backgroundColor: 'transparent' }}>
+
+        {/* Left: Back */}
+        <button
+          onClick={() => setPage('landing')}
+          className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium"
+          style={{ backgroundColor: 'white', borderRadius: '50px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', color: '#374151' }}
+        >
+          ← Back
+        </button>
+
+        {/* Center: Logo */}
+        <div className="px-4 py-2" style={{ backgroundColor: 'white', borderRadius: '50px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
           <h1 className="text-base font-bold" style={{ color: '#0f1535' }}>
             fuel<span style={{ color: '#4c6ef5' }}>finder</span>
             <span className="text-xs font-normal ml-2 px-2 py-0.5" style={{ backgroundColor: '#dbeafe', color: '#1d4ed8', borderRadius: '4px' }}>NSW</span>
           </h1>
         </div>
 
-        {/* Fuel type dropdown */}
+        {/* Right: Fuel type */}
         <select
           value={fuelType}
           onChange={e => handleFuelTypeChange(e.target.value)}
@@ -461,9 +464,16 @@ function App() {
 
           {/* Search label + sort */}
           <div className="flex justify-between items-center mb-4">
-            <p className="text-sm" style={{ color: '#475569' }}>
-              Near <span className="font-semibold" style={{ color: '#0f172a' }}>{searchLabel}</span> · {RADIUS}km
-            </p>
+            <div>
+              <p className="text-sm" style={{ color: '#475569' }}>
+                Near <span className="font-semibold" style={{ color: '#0f172a' }}>{searchLabel}</span>
+              </p>
+              {data.stations.some(s => s.location.distance > RADIUS) && (
+                <p className="text-xs mt-0.5" style={{ color: '#f59e0b' }}>
+                  Some stations beyond {RADIUS}km — closest available shown
+                </p>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <span className="text-xs" style={{ color: '#94a3b8' }}>Sort:</span>
               <div className="flex" style={{ backgroundColor: 'white', borderRadius: '50px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
@@ -497,7 +507,7 @@ function App() {
             className="w-full mb-4 py-3 text-sm font-medium flex items-center justify-between px-4"
             style={{ backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.9)', color: '#0f172a', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
           >
-            <span>⛽ Use tank size &amp; level to see exact cost</span>
+            <span>Use tank size and level to see exact fill cost</span>
             <span style={{ color: '#1d4ed8' }}>{showCalculator ? '▲ Hide' : '▼ Show'}</span>
           </button>
 
@@ -548,7 +558,7 @@ function App() {
           {data.stations.length === 0 && (
             <div className="px-4 py-8 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: '12px' }}>
               <p className="text-sm" style={{ color: '#64748b' }}>
-                No stations found within {RADIUS}km of {searchLabel || 'this location'}.
+                No stations found near {searchLabel || 'this location'}.
               </p>
               <p className="text-xs mt-2" style={{ color: '#94a3b8' }}>Try searching a nearby suburb.</p>
             </div>
