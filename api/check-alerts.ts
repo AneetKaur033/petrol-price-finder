@@ -11,6 +11,13 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
 
+  // Verify secret key
+  const secret = req.headers['x-cron-secret']
+  if (secret !== process.env.CRON_SECRET) {
+    return res.status(401).json({ error: 'Unauthorised' })
+  }
+
+  // Get all active alerts from database
   // Get all active alerts from database
   const { data: alerts, error } = await supabase
     .from('alerts')
