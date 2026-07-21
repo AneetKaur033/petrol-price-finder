@@ -62,9 +62,9 @@ function App() {
   const [searchLabel, setSearchLabel] = useState<string | null>(null)
   const [activeFuel, setActiveFuel] = useState('E10')
   const [confirmStation, setConfirmStation] = useState<Station | null>(null)
-  const [expandedStation, setExpandedStation] = useState<number | null>(null)
   const [tankSize, setTankSize] = useState('')
   const [fuelLevel, setFuelLevel] = useState('')
+  const [showCalculator, setShowCalculator] = useState(false)
 
   const RADIUS = 3
 
@@ -154,16 +154,9 @@ function App() {
 
   async function handleFuelTypeChange(newFuel: string) {
     setFuelType(newFuel)
+    setActiveFuel(newFuel)
     if (lastSearchCoords) {
       await fetchByCoords(lastSearchCoords.lat, lastSearchCoords.lng, newFuel)
-    }
-  }
-
-  function handleCardClick(station: Station, stationIndex: number) {
-    if (expandedStation === stationIndex) {
-      setConfirmStation(station)
-    } else {
-      setExpandedStation(stationIndex)
     }
   }
 
@@ -208,13 +201,13 @@ function App() {
   const sortedStations = getSortedStations()
   const cheapestPrice = sortedStations.length > 0 ? sortedStations[0].price?.price : null
 
+  const gradientBg = 'linear-gradient(135deg, #dbeafe 0%, #e0f2fe 40%, #ccfbf1 100%)'
+  const fontFamily = "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+
   // ─── LANDING PAGE ───────────────────────────────────────────────
   if (page === 'landing') {
     return (
-      <div style={{
-        background: 'linear-gradient(135deg, #dbeafe 0%, #e0f2fe 40%, #ccfbf1 100%)',
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
-      }}>
+      <div style={{ background: gradientBg, fontFamily }}>
 
         {/* Nav */}
         <div className="px-8 py-5" style={{ backgroundColor: 'transparent' }}>
@@ -390,7 +383,7 @@ function App() {
 
   // ─── RESULTS PAGE ───────────────────────────────────────────────
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f8fafc', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+    <div className="min-h-screen" style={{ background: gradientBg, fontFamily }}>
 
       {/* Google Maps Confirmation Modal */}
       {confirmStation && (
@@ -427,40 +420,34 @@ function App() {
         </div>
       )}
 
-      {/* Results Nav */}
-      <div
-        className="px-4 py-3 flex items-center gap-3"
-        style={{ backgroundColor: 'white', borderBottom: '1px solid #e2e8f0' }}
-      >
-        <button
-          onClick={() => setPage('landing')}
-          className="text-sm flex items-center gap-1.5 px-3 py-1.5 shrink-0"
-          style={{ color: '#374151', border: '1px solid #e2e8f0', borderRadius: '6px' }}
-        >
-          ← Back
-        </button>
-
-        <h1 className="text-base font-bold shrink-0" style={{ color: '#0f172a' }}>
-          fuel<span style={{ color: '#4c6ef5' }}>finder</span>
-        </h1>
-
-        <div className="flex items-center gap-2 overflow-x-auto ml-2">
-          {FUEL_TYPES.map(f => (
-            <button
-              key={f.value}
-              onClick={() => handleFuelTypeChange(f.value)}
-              className="text-xs px-2.5 py-1 font-medium shrink-0"
-              style={{
-                backgroundColor: fuelType === f.value ? '#1d4ed8' : 'transparent',
-                color: fuelType === f.value ? 'white' : '#374151',
-                border: fuelType === f.value ? '1px solid #1d4ed8' : '1px solid #e2e8f0',
-                borderRadius: '4px',
-              }}
-            >
-              {f.value}
-            </button>
-          ))}
+      {/* Results Nav — same pill style as landing */}
+      <div className="px-8 py-5 flex items-center gap-4" style={{ backgroundColor: 'transparent' }}>
+        <div className="inline-flex items-center gap-3 px-4 py-2" style={{ backgroundColor: 'white', borderRadius: '50px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+          <button
+            onClick={() => setPage('landing')}
+            className="text-sm font-medium flex items-center gap-1"
+            style={{ color: '#374151' }}
+          >
+            ← Back
+          </button>
+          <div style={{ width: '1px', height: '16px', backgroundColor: '#e2e8f0' }} />
+          <h1 className="text-base font-bold" style={{ color: '#0f1535' }}>
+            fuel<span style={{ color: '#4c6ef5' }}>finder</span>
+            <span className="text-xs font-normal ml-2 px-2 py-0.5" style={{ backgroundColor: '#dbeafe', color: '#1d4ed8', borderRadius: '4px' }}>NSW</span>
+          </h1>
         </div>
+
+        {/* Fuel type dropdown */}
+        <select
+          value={fuelType}
+          onChange={e => handleFuelTypeChange(e.target.value)}
+          className="px-4 py-2 text-sm font-medium focus:outline-none"
+          style={{ backgroundColor: 'white', borderRadius: '50px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: 'none', color: '#0f172a' }}
+        >
+          {FUEL_TYPES.map(f => (
+            <option key={f.value} value={f.value}>{f.label}</option>
+          ))}
+        </select>
       </div>
 
       {/* Loading */}
@@ -470,61 +457,96 @@ function App() {
 
       {/* Results */}
       {data && !loading && (
-        <div className="max-w-2xl mx-auto px-4 mt-6 pb-10">
+        <div className="max-w-2xl mx-auto px-4 pb-10">
 
-          {searchLabel && (
-            <p className="text-xs mb-4" style={{ color: '#64748b' }}>
-              Showing results near <span className="font-semibold" style={{ color: '#0f172a' }}>{searchLabel}</span> within {RADIUS}km
+          {/* Search label + sort */}
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-sm" style={{ color: '#475569' }}>
+              Near <span className="font-semibold" style={{ color: '#0f172a' }}>{searchLabel}</span> · {RADIUS}km
             </p>
-          )}
-
-          {/* Fill Cost Calculator */}
-          <div className="mb-5 p-4" style={{ backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-            <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: '#94a3b8' }}>
-              Fill Cost Calculator
-            </p>
-            <div className="flex gap-3 items-end">
-              <div className="flex-1">
-                <label className="text-xs mb-1 block" style={{ color: '#64748b' }}>Tank size (litres)</label>
-                <input
-                  type="number"
-                  value={tankSize}
-                  onChange={e => {
-                    const val = parseFloat(e.target.value)
-                    if (e.target.value === '' || val > 0) setTankSize(e.target.value)
+            <div className="flex items-center gap-2">
+              <span className="text-xs" style={{ color: '#94a3b8' }}>Sort:</span>
+              <div className="flex" style={{ backgroundColor: 'white', borderRadius: '50px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+                <button
+                  onClick={() => setSortMode('price')}
+                  className="px-3 py-1.5 text-xs font-medium"
+                  style={{
+                    backgroundColor: sortMode === 'price' ? '#1d4ed8' : 'transparent',
+                    color: sortMode === 'price' ? 'white' : '#374151',
                   }}
-                  placeholder="e.g. 50"
-                  min="1"
-                  className="w-full px-3 py-2 text-sm focus:outline-none"
-                  style={{ border: '1px solid #e2e8f0', backgroundColor: '#f9fafb', borderRadius: '6px', color: '#0f172a' }}
-                />
-              </div>
-              <div className="flex-1">
-                <label className="text-xs mb-1 block" style={{ color: '#64748b' }}>Current level (%)</label>
-                <input
-                  type="number"
-                  value={fuelLevel}
-                  onChange={e => {
-                    const val = parseFloat(e.target.value)
-                    if (e.target.value === '' || (val >= 0 && val <= 100)) setFuelLevel(e.target.value)
+                >
+                  Price
+                </button>
+                <button
+                  onClick={() => setSortMode('distance')}
+                  className="px-3 py-1.5 text-xs font-medium"
+                  style={{
+                    backgroundColor: sortMode === 'distance' ? '#1d4ed8' : 'transparent',
+                    color: sortMode === 'distance' ? 'white' : '#374151',
                   }}
-                  placeholder="e.g. 25"
-                  min="0"
-                  max="100"
-                  className="w-full px-3 py-2 text-sm focus:outline-none"
-                  style={{ border: '1px solid #e2e8f0', backgroundColor: '#f9fafb', borderRadius: '6px', color: '#0f172a' }}
-                />
+                >
+                  Distance
+                </button>
               </div>
             </div>
-            {litresNeeded && (
-              <p className="text-xs mt-2" style={{ color: '#64748b' }}>
-                You need <span className="font-semibold" style={{ color: '#0f172a' }}>{litresNeeded.toFixed(1)}L</span> to fill up
-              </p>
-            )}
           </div>
 
+          {/* Fill Cost Calculator toggle */}
+          <button
+            onClick={() => setShowCalculator(!showCalculator)}
+            className="w-full mb-4 py-3 text-sm font-medium flex items-center justify-between px-4"
+            style={{ backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.9)', color: '#0f172a', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+          >
+            <span>⛽ Use tank size &amp; level to see exact cost</span>
+            <span style={{ color: '#1d4ed8' }}>{showCalculator ? '▲ Hide' : '▼ Show'}</span>
+          </button>
+
+          {/* Fill Cost Calculator */}
+          {showCalculator && (
+            <div className="mb-4 p-4" style={{ backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.9)', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+              <div className="flex gap-3 items-end">
+                <div className="flex-1">
+                  <label className="text-xs mb-1 block" style={{ color: '#64748b' }}>Tank size (litres)</label>
+                  <input
+                    type="number"
+                    value={tankSize}
+                    onChange={e => {
+                      const val = parseFloat(e.target.value)
+                      if (e.target.value === '' || val > 0) setTankSize(e.target.value)
+                    }}
+                    placeholder="e.g. 50"
+                    min="1"
+                    className="w-full px-3 py-2 text-sm focus:outline-none"
+                    style={{ border: '1px solid #e2e8f0', backgroundColor: '#f9fafb', borderRadius: '6px', color: '#0f172a' }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs mb-1 block" style={{ color: '#64748b' }}>Current level (%)</label>
+                  <input
+                    type="number"
+                    value={fuelLevel}
+                    onChange={e => {
+                      const val = parseFloat(e.target.value)
+                      if (e.target.value === '' || (val >= 0 && val <= 100)) setFuelLevel(e.target.value)
+                    }}
+                    placeholder="e.g. 25"
+                    min="0"
+                    max="100"
+                    className="w-full px-3 py-2 text-sm focus:outline-none"
+                    style={{ border: '1px solid #e2e8f0', backgroundColor: '#f9fafb', borderRadius: '6px', color: '#0f172a' }}
+                  />
+                </div>
+              </div>
+              {litresNeeded && (
+                <p className="text-xs mt-2" style={{ color: '#64748b' }}>
+                  You need <span className="font-semibold" style={{ color: '#0f172a' }}>{litresNeeded.toFixed(1)}L</span> to fill up
+                </p>
+              )}
+            </div>
+          )}
+
           {data.stations.length === 0 && (
-            <div className="px-4 py-8 text-center" style={{ backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            <div className="px-4 py-8 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: '12px' }}>
               <p className="text-sm" style={{ color: '#64748b' }}>
                 No stations found within {RADIUS}km of {searchLabel || 'this location'}.
               </p>
@@ -532,128 +554,87 @@ function App() {
             </div>
           )}
 
-          {data.stations.length > 0 && (
-            <>
-              <div className="flex justify-between items-center mb-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs uppercase tracking-wider" style={{ color: '#94a3b8' }}>Sort by</span>
-                  <div className="flex" style={{ border: '1px solid #e2e8f0', borderRadius: '6px', overflow: 'hidden' }}>
-                    <button
-                      onClick={() => setSortMode('price')}
-                      className="px-3 py-1.5 text-sm font-medium"
-                      style={{
-                        backgroundColor: sortMode === 'price' ? '#1d4ed8' : 'transparent',
-                        color: sortMode === 'price' ? 'white' : '#374151',
-                      }}
-                    >
-                      Price
-                    </button>
-                    <button
-                      onClick={() => setSortMode('distance')}
-                      className="px-3 py-1.5 text-sm font-medium"
-                      style={{
-                        backgroundColor: sortMode === 'distance' ? '#1d4ed8' : 'transparent',
-                        color: sortMode === 'distance' ? 'white' : '#374151',
-                        borderLeft: '1px solid #e2e8f0',
-                      }}
-                    >
-                      Distance
-                    </button>
+          <div className="space-y-3">
+            {getSortedStations().map(({ station, price }, index) => {
+              const saving = avgPrice ? (avgPrice - price!.price).toFixed(1) : null
+              const membersOnly = isMembersOnly(station.name)
+              const fillCost = getFillCost(price!.price)
+              const cheapestFillCost = cheapestPrice && litresNeeded ? (cheapestPrice / 100) * litresNeeded : null
+              const thisFillCost = litresNeeded ? (price!.price / 100) * litresNeeded : null
+              const fillSaving = cheapestFillCost && thisFillCost && index > 0
+                ? (thisFillCost - cheapestFillCost).toFixed(2)
+                : null
+
+              return (
+                <div
+                  key={station.code}
+                  onClick={() => setConfirmStation(station)}
+                  className="cursor-pointer"
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.9)',
+                    borderRadius: '12px',
+                    border: index === 0 ? '2px solid #16a34a' : '1px solid rgba(255,255,255,0.9)',
+                    padding: '16px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                    transition: 'transform 0.1s, box-shadow 0.1s',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.transform = 'translateY(-1px)'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'
+                  }}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 min-w-0 mr-4">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="text-xs font-medium" style={{ color: '#94a3b8' }}>#{index + 1}</span>
+                        {index === 0 && (
+                          <span className="text-xs font-semibold px-2 py-0.5" style={{ backgroundColor: '#dcfce7', color: '#16a34a', borderRadius: '20px' }}>
+                            {sortMode === 'price' ? 'Cheapest' : 'Closest'}
+                          </span>
+                        )}
+                        {membersOnly && (
+                          <span className="text-xs font-semibold px-2 py-0.5" style={{ backgroundColor: '#fef9c3', color: '#854d0e', borderRadius: '20px' }}>
+                            Members only
+                          </span>
+                        )}
+                      </div>
+                      <h2 className="font-semibold text-base leading-tight mb-1" style={{ color: '#0f172a' }}>{station.name}</h2>
+                      <p className="text-xs" style={{ color: '#64748b' }}>{station.address}</p>
+                      <p className="text-xs mt-1" style={{ color: '#94a3b8' }}>{station.location.distance.toFixed(1)} km away</p>
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      {fillCost ? (
+                        <>
+                          <p className="text-3xl font-bold leading-none" style={{ color: '#16a34a' }}>{fillCost}</p>
+                          <p className="text-xs mt-1" style={{ color: '#94a3b8' }}>{price!.price}¢/litre</p>
+                          {fillSaving && parseFloat(fillSaving) > 0 && (
+                            <p className="text-xs mt-0.5" style={{ color: '#dc2626' }}>+${fillSaving} vs cheapest</p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-3xl font-bold leading-none" style={{ color: getPriceColor(price!.price) }}>{price!.price}</p>
+                          <p className="text-xs mt-1" style={{ color: '#94a3b8' }}>¢/litre</p>
+                          {saving && parseFloat(saving) > 0 && (
+                            <p className="text-xs mt-1" style={{ color: '#16a34a' }}>Save {saving}¢</p>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <p className="text-xs" style={{ color: '#94a3b8' }}>
-                  {data.stations.length} stations · avg {avgPrice?.toFixed(1)}¢/L
-                </p>
-              </div>
+              )
+            })}
+          </div>
 
-              <div className="space-y-2">
-                {getSortedStations().map(({ station, price }, index) => {
-                  const saving = avgPrice ? (avgPrice - price!.price).toFixed(1) : null
-                  const membersOnly = isMembersOnly(station.name)
-                  const isExpanded = expandedStation === index
-                  const fillCost = getFillCost(price!.price)
-                  const cheapestFillCost = cheapestPrice && litresNeeded ? (cheapestPrice / 100) * litresNeeded : null
-                  const thisFillCost = litresNeeded ? (price!.price / 100) * litresNeeded : null
-                  const fillSaving = cheapestFillCost && thisFillCost && index > 0
-                    ? (thisFillCost - cheapestFillCost).toFixed(2)
-                    : null
-
-                  return (
-                    <div
-                      key={station.code}
-                      onClick={() => handleCardClick(station, index)}
-                      className="flex items-center cursor-pointer"
-                      style={{
-                        backgroundColor: isExpanded ? '#f0f4ff' : 'white',
-                        borderLeft: index === 0 ? '3px solid #16a34a' : '1px solid #e2e8f0',
-                        borderTop: '1px solid #e2e8f0',
-                        borderRight: '1px solid #e2e8f0',
-                        borderBottom: '1px solid #e2e8f0',
-                        padding: '14px 16px',
-                        borderRadius: index === 0 ? '0 12px 12px 0' : '12px',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                        transition: 'background-color 0.15s',
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f0f4ff')}
-                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = isExpanded ? '#f0f4ff' : 'white')}
-                    >
-                      <div className="shrink-0 mr-4 text-center w-5" style={{ color: index === 0 ? '#16a34a' : '#cbd5e1' }}>
-                        <p className="text-sm font-bold">{index + 1}</p>
-                      </div>
-
-                      <div className="flex-1 min-w-0 mr-4">
-                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                          {index === 0 && (
-                            <span className="text-xs font-semibold" style={{ color: '#16a34a' }}>
-                              {sortMode === 'price' ? 'CHEAPEST' : 'CLOSEST'}
-                            </span>
-                          )}
-                          {membersOnly && (
-                            <span
-                              className="text-xs font-semibold px-1.5 py-0.5"
-                              style={{ backgroundColor: '#fef9c3', color: '#854d0e', border: '1px solid #fde047', borderRadius: '4px' }}
-                            >
-                              MEMBERS ONLY
-                            </span>
-                          )}
-                        </div>
-                        <h2 className="font-semibold text-sm leading-tight" style={{ color: '#0f172a' }}>{station.name}</h2>
-                        <p className="text-xs mt-0.5" style={{ color: '#94a3b8' }}>
-                          {station.location.distance.toFixed(1)} km away
-                        </p>
-                        {isExpanded && (
-                          <p className="text-xs mt-1" style={{ color: '#64748b' }}>
-                            {station.address}
-                            <span className="ml-2" style={{ color: '#1d4ed8' }}>Tap again for directions →</span>
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="shrink-0 text-right">
-                        {fillCost ? (
-                          <>
-                            <p className="text-3xl font-bold leading-none" style={{ color: '#16a34a' }}>{fillCost}</p>
-                            <p className="text-xs mt-1" style={{ color: '#94a3b8' }}>{price!.price}¢/litre</p>
-                            {fillSaving && parseFloat(fillSaving) > 0 && (
-                              <p className="text-xs mt-0.5" style={{ color: '#dc2626' }}>+${fillSaving} vs cheapest</p>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-3xl font-bold leading-none" style={{ color: getPriceColor(price!.price) }}>{price!.price}</p>
-                            <p className="text-xs mt-1" style={{ color: '#94a3b8' }}>¢/litre</p>
-                            {saving && parseFloat(saving) > 0 && (
-                              <p className="text-xs mt-1" style={{ color: '#16a34a' }}>Save {saving}¢</p>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </>
-          )}
+          <p className="text-xs text-center mt-6" style={{ color: '#94a3b8' }}>
+            {data.stations.length} stations · avg {avgPrice?.toFixed(1)}¢/L
+          </p>
         </div>
       )}
     </div>
