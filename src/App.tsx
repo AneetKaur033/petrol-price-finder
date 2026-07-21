@@ -62,6 +62,11 @@ function App() {
   const [searchLabel, setSearchLabel] = useState<string | null>(null)
   const [activeFuel, setActiveFuel] = useState('E10')
   const [confirmStation, setConfirmStation] = useState<Station | null>(null)
+  const [alertStation, setAlertStation] = useState<Station | null>(null)
+  const [alertEmail, setAlertEmail] = useState('')
+  const [alertThreshold, setAlertThreshold] = useState('')
+  const [alertSaving, setAlertSaving] = useState(false)
+  const [alertSuccess, setAlertSuccess] = useState(false)
   const [tankSize, setTankSize] = useState('')
   const [fuelLevel, setFuelLevel] = useState('')
   const [showCalculator, setShowCalculator] = useState(false)
@@ -164,6 +169,31 @@ function App() {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(station.address)}`
     window.open(url, '_blank')
     setConfirmStation(null)
+  }
+
+  async function handleSetAlert() {
+    if (!alertStation || !alertEmail || !alertThreshold) return
+    setAlertSaving(true)
+    try {
+      const res = await fetch('/api/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: alertEmail,
+          station_code: alertStation.code,
+          station_name: alertStation.name,
+          station_address: alertStation.address,
+          fuel_type: activeFuel,
+          threshold_price: parseFloat(alertThreshold),
+        }),
+      })
+      if (!res.ok) throw new Error('Failed to save alert')
+      setAlertSuccess(true)
+    } catch (e) {
+      alert('Failed to save alert. Please try again.')
+    } finally {
+      setAlertSaving(false)
+    }
   }
 
   const getPrice = (stationCode: number) => {
@@ -385,8 +415,8 @@ function App() {
   return (
     <div className="min-h-screen" style={{ background: gradientBg, fontFamily }}>
 
-      {/* Google Maps Confirmation Modal */}
-      {confirmStation && (
+      {/* Station Action Modal */}
+      {confirmStation && !alertStation && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center px-4"
           style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
@@ -397,25 +427,113 @@ function App() {
             style={{ backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}
             onClick={e => e.stopPropagation()}
           >
-            <p className="font-bold text-base mb-1" style={{ color: '#0f172a' }}>Open in Google Maps?</p>
-            <p className="text-sm mb-1" style={{ color: '#64748b' }}>{confirmStation.name}</p>
+            <p className="font-bold text-base mb-1" style={{ color: '#0f172a' }}>{confirmStation.name}</p>
             <p className="text-xs mb-5" style={{ color: '#94a3b8' }}>{confirmStation.address}</p>
-            <div className="flex gap-3">
+            <div className="space-y-2">
+              <button
+                onClick={() => openGoogleMaps(confirmStation)}
+                className="w-full py-3 text-sm font-semibold text-white"
+                style={{ backgroundColor: '#1d4ed8', borderRadius: '8px' }}
+              >
+                Get directions
+              </button>
+              <button
+                onClick={() => {
+                  setAlertStation(confirmStation)
+                  setConfirmStation(null)
+                  setAlertSuccess(false)
+                  setAlertEmail('')
+                  setAlertThreshold('')
+                }}
+                className="w-full py-3 text-sm font-semibold"
+                style={{ backgroundColor: '#f0f4ff', color: '#1d4ed8', borderRadius: '8px' }}
+              >
+                Set price alert
+              </button>
               <button
                 onClick={() => setConfirmStation(null)}
-                className="flex-1 py-2 text-sm font-medium"
+                className="w-full py-3 text-sm font-medium"
                 style={{ border: '1px solid #e2e8f0', color: '#374151', borderRadius: '8px' }}
               >
                 Cancel
               </button>
-              <button
-                onClick={() => openGoogleMaps(confirmStation)}
-                className="flex-1 py-2 text-sm font-semibold text-white"
-                style={{ backgroundColor: '#1d4ed8', borderRadius: '8px' }}
-              >
-                Open Google Maps
-              </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Set Alert Modal */}
+      {alertStation && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          onClick={() => setAlertStation(null)}
+        >
+          <div
+            className="w-full max-w-sm p-6"
+            style={{ backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {alertSuccess ? (
+              <>
+                <p className="font-bold text-base mb-2" style={{ color: '#16a34a' }}>Alert set!</p>
+                <p className="text-sm mb-4" style={{ color: '#64748b' }}>
+                  We'll email you when {alertStation.name} drops below {alertThreshold}¢/L.
+                </p>
+                <button
+                  onClick={() => setAlertStation(null)}
+                  className="w-full py-3 text-sm font-semibold text-white"
+                  style={{ backgroundColor: '#1d4ed8', borderRadius: '8px' }}
+                >
+                  Done
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="font-bold text-base mb-1" style={{ color: '#0f172a' }}>Set price alert</p>
+                <p className="text-sm mb-5" style={{ color: '#64748b' }}>
+                  Get an email when <strong>{alertStation.name}</strong> drops below your price.
+                </p>
+
+                <label className="text-xs font-medium mb-1 block" style={{ color: '#64748b' }}>Your email</label>
+                <input
+                  type="email"
+                  value={alertEmail}
+                  onChange={e => setAlertEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full px-4 py-3 text-sm mb-3 focus:outline-none"
+                  style={{ border: '1px solid #e2e8f0', borderRadius: '8px', color: '#0f172a' }}
+                />
+
+                <label className="text-xs font-medium mb-1 block" style={{ color: '#64748b' }}>Alert me when price drops below (¢/L)</label>
+                <input
+                  type="number"
+                  value={alertThreshold}
+                  onChange={e => setAlertThreshold(e.target.value)}
+                  placeholder="e.g. 160"
+                  className="w-full px-4 py-3 text-sm mb-5 focus:outline-none"
+                  style={{ border: '1px solid #e2e8f0', borderRadius: '8px', color: '#0f172a' }}
+                />
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setAlertStation(null)}
+                    className="flex-1 py-2 text-sm font-medium"
+                    style={{ border: '1px solid #e2e8f0', color: '#374151', borderRadius: '8px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSetAlert}
+                    disabled={alertSaving || !alertEmail || !alertThreshold}
+                    className="flex-1 py-2 text-sm font-semibold text-white"
+                    style={{ backgroundColor: '#1d4ed8', borderRadius: '8px', opacity: (!alertEmail || !alertThreshold) ? 0.5 : 1 }}
+                  >
+                    {alertSaving ? 'Saving...' : 'Set alert'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
