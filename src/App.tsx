@@ -422,8 +422,6 @@ function App() {
 
       {/* Results Nav */}
       <div className="px-6 py-4 flex items-center justify-between" style={{ backgroundColor: 'transparent' }}>
-
-        {/* Left: Back */}
         <button
           onClick={() => setPage('landing')}
           className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium"
@@ -432,7 +430,6 @@ function App() {
           ← Back
         </button>
 
-        {/* Center: Logo */}
         <div className="px-4 py-2" style={{ backgroundColor: 'white', borderRadius: '50px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
           <h1 className="text-base font-bold" style={{ color: '#0f1535' }}>
             fuel<span style={{ color: '#4c6ef5' }}>finder</span>
@@ -440,7 +437,6 @@ function App() {
           </h1>
         </div>
 
-        {/* Right: Fuel type */}
         <select
           value={fuelType}
           onChange={e => handleFuelTypeChange(e.target.value)}
@@ -462,7 +458,6 @@ function App() {
       {data && !loading && (
         <div className="max-w-2xl mx-auto px-4 pb-10">
 
-          {/* Search label + sort */}
           <div className="flex justify-between items-center mb-4">
             <div>
               <p className="text-sm" style={{ color: '#475569' }}>
@@ -583,7 +578,7 @@ function App() {
                   style={{
                     backgroundColor: 'rgba(255,255,255,0.9)',
                     borderRadius: '12px',
-                    border: index === 0 ? '2px solid #16a34a' : '1px solid rgba(255,255,255,0.9)',
+                    border: '1px solid rgba(255,255,255,0.9)',
                     padding: '16px',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                     transition: 'transform 0.1s, box-shadow 0.1s',
@@ -599,19 +594,13 @@ function App() {
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0 mr-4">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="text-xs font-medium" style={{ color: '#94a3b8' }}>#{index + 1}</span>
-                        {index === 0 && (
-                          <span className="text-xs font-semibold px-2 py-0.5" style={{ backgroundColor: '#dcfce7', color: '#16a34a', borderRadius: '20px' }}>
-                            {sortMode === 'price' ? 'Cheapest' : 'Closest'}
-                          </span>
-                        )}
-                        {membersOnly && (
+                      {membersOnly && (
+                        <div className="mb-1">
                           <span className="text-xs font-semibold px-2 py-0.5" style={{ backgroundColor: '#fef9c3', color: '#854d0e', borderRadius: '20px' }}>
                             Members only
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
                       <h2 className="font-semibold text-base leading-tight mb-1" style={{ color: '#0f172a' }}>{station.name}</h2>
                       <p className="text-xs" style={{ color: '#64748b' }}>{station.address}</p>
                       <p className="text-xs mt-1" style={{ color: '#94a3b8' }}>{station.location.distance.toFixed(1)} km away</p>
