@@ -91,8 +91,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #1d4ed8; color: white; text-decoration: none; border-radius: 8px;">
               Get directions
             </a>
-            <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">FuelFinder NSW · You're receiving this because you set a price alert.</p>
-          </div>
+            <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">FuelFinder NSW · You're receiving this because you set a price alert. To stop these alerts, reply to this email with "unsubscribe".</p>          </div>
         `,
       })
 
