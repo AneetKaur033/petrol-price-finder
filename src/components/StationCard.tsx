@@ -1,12 +1,9 @@
 import type { Station, Price } from '../types'
 import { isMembersOnly } from '../types'
-
 interface StationCardProps {
   station: Station
   price: Price
-  index: number
   avgPrice: number | null
-  sortMode: 'price' | 'distance'
   fillCost: string | null
   fillSaving: string | null
   onClick: () => void
@@ -15,9 +12,7 @@ interface StationCardProps {
 export default function StationCard({
   station,
   price,
-  index,
   avgPrice,
-  sortMode,
   fillCost,
   fillSaving,
   onClick,

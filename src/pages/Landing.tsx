@@ -50,7 +50,7 @@ export default function Landing({
               Real-time petrol prices from every station in NSW.
             </p>
             <p className="text-lg font-light mb-8" style={{ color: '#475569', maxWidth: '440px', lineHeight: '1.7' }}>
-              Know the cheapest price before you leave — not after you've already pulled in.
+              Know the cheapest price before you leave, not after you have already pulled in.
             </p>
             <button
               onClick={() => {

@@ -186,13 +186,11 @@ export default function Results({
               : null
 
             return (
-              <StationCard
+            <StationCard
                 key={station.code}
                 station={station}
                 price={price!}
-                index={index}
                 avgPrice={avgPrice}
-                sortMode={sortMode}
                 fillCost={fillCost}
                 fillSaving={fillSaving}
                 onClick={() => setConfirmStation(station)}
